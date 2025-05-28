@@ -1,9 +1,8 @@
-const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso } = require('../models');
+const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia } = require('../models');
 
 // Get all courses
 const getAllCourses = async (req, res) => {
   try {
-    console.log('Iniciando busca de cursos...');
     const courses = await Cursos.findAll({
       include: [
         { model: Topicos },
@@ -11,7 +10,6 @@ const getAllCourses = async (req, res) => {
         { model: OcorrenciasCurso }
       ]
     });
-    console.log('Cursos encontrados:', courses.length);
     res.json(courses);
   } catch (error) {
     console.error('Erro ao buscar cursos:', error);
@@ -100,10 +98,43 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+// Get user courses
+const getUsersCourses = async (req, res) => {
+  try {
+    const utilizadores = await Utilizadores.findAll({
+      include: [{
+        model: InscricoesOcorrencia,
+        include: [{
+          model: OcorrenciasCurso,
+          where: { id_curso: req.params.id }, // filtra pelo curso
+          attributes: [] // não precisa retornar os dados da ocorrência
+        }]
+      }]
+    });
+
+    const users =  utilizadores.map(utilizador => {
+      return {
+        id_utilizador: utilizador.id_utilizador,
+        nome: utilizador.nome,
+        email: utilizador.email,
+        url_foto_perfil: utilizador.url_foto_perfil,
+        biografia: utilizador.biografia,
+        departamento: utilizador.departamento,
+      };
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar utilizadores do curso' });
+  }
+};
+
 module.exports = {
   getAllCourses,
   getCourseById,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  getUsersCourses
 };

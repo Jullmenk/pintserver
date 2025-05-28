@@ -1,4 +1,4 @@
-const { Utilizadores, TipoUtilizador } = require('../models');
+const { Utilizadores, TipoUtilizador, Cursos, InscricoesOcorrencia, OcorrenciasCurso, Topicos } = require('../models');
 
 // Get all users
 const getAllUsers = async (req, res) => {
@@ -8,7 +8,22 @@ const getAllUsers = async (req, res) => {
         model: TipoUtilizador,
       }]
     });
-    res.json(users);
+
+    
+    const usersData =  users.map(utilizador => {
+      return {
+        id_utilizador: utilizador.id_utilizador,
+        nome: utilizador.nome,
+        email: utilizador.email,
+        url_foto_perfil: utilizador.url_foto_perfil,
+        biografia: utilizador.biografia,
+        departamento: utilizador.departamento,
+        area_preferidas: utilizador.area_preferidas
+      };
+    });
+
+
+    res.json(usersData);
   } catch (error) {
     console.log(error)
     res.status(500).json({ error: 'Error fetching users' });
@@ -35,7 +50,19 @@ const getUserById = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(user);
+    const usersData =  user.map(utilizador => {
+      return {
+        id_utilizador: utilizador.id_utilizador,
+        nome: utilizador.nome,
+        email: utilizador.email,
+        url_foto_perfil: utilizador.url_foto_perfil,
+        biografia: utilizador.biografia,
+        departamento: utilizador.departamento,
+        area_preferidas: utilizador.area_preferidas
+      };
+    });
+
+    res.json(usersData);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching user' });
   }
@@ -78,10 +105,48 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Get user courses
+const getUserCourses = async (req, res) => {
+  try {
+    const user = await Utilizadores.findByPk(req.params.id, {
+      include: [{
+        model: InscricoesOcorrencia,
+        include: [{
+          model: OcorrenciasCurso,
+          include: [{
+            model: Cursos,
+            include: [Topicos]  // <- Aqui é onde incluímos o nome do tópico
+          }]
+        }]
+      }]
+    });
+    const cursos = user.InscricoesOcorrencia.map(inscricao => {
+      const curso = inscricao.OcorrenciasCurso?.Curso;
+      return {
+        id_curso: curso?.id_curso,
+        titulo: curso?.titulo?.trim(),  // remover espaços
+        descricao: curso?.descricao,
+        id_topico: curso?.id_topico,
+        nome_topico: curso?.Topico?.nome?.trim(),  // Aqui buscamos o nome do tópico
+        url_capa: curso?.url_capa,
+        url_icon: curso?.url_icon,
+        data_criacao: curso?.data_criacao,
+        ultima_atualizacao: curso?.ultima_atualizacao
+      };
+    }).filter(curso => curso); // Remove undefined
+
+    res.json(cursos);
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Error fetching user courses' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
-  getAllUsersType
+  getAllUsersType,
+  getUserCourses
 };

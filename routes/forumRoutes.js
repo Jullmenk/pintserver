@@ -11,7 +11,7 @@ const authMiddleware = require('../middleware/auth');
  */
 
 // All routes are protected
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 /**
  * @swagger

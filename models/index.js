@@ -96,8 +96,8 @@ Utilizadores.hasMany(OcorrenciasCurso, { foreignKey: 'id_utilizador' });
 OcorrenciasCurso.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
 
 // OcorrenciasCurso -> Contudos
-OcorrenciasCurso.hasMany(Contudos, { foreignKey: 'id_ocorrencia_curso' });
-Contudos.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia_curso' });
+OcorrenciasCurso.hasMany(Contudos, { foreignKey: 'id_ocorrencia' });
+Contudos.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 
 // Topicos -> PartilhasConhecimento
 Topicos.hasMany(PartilhasConhecimento, { foreignKey: 'id_topico' });
@@ -108,36 +108,36 @@ Utilizadores.hasMany(PartilhasConhecimento, { foreignKey: 'id_utilizador' });
 PartilhasConhecimento.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
 
 // PartilhasConhecimento -> Denuncias
-PartilhasConhecimento.hasMany(Denuncias, { foreignKey: 'id_partilha_conhecimento' });
-Denuncias.belongsTo(PartilhasConhecimento, { foreignKey: 'id_partilha_conhecimento' });
+PartilhasConhecimento.hasMany(Denuncias, { foreignKey: 'id_partilha' });
+Denuncias.belongsTo(PartilhasConhecimento, { foreignKey: 'id_partilha' });
 
 // Utilizadores -> Denuncias
 Utilizadores.hasMany(Denuncias, { foreignKey: 'id_utilizador' });
 Denuncias.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
 
 // OcorrenciasCurso -> InscricoesOcorrencia
-OcorrenciasCurso.hasMany(InscricoesOcorrencia, { foreignKey: 'id_ocorrencia_curso' });
-InscricoesOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia_curso' });
+OcorrenciasCurso.hasMany(InscricoesOcorrencia, { foreignKey: 'id_ocorrencia' });
+InscricoesOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 
 // Utilizadores -> InscricoesOcorrencia
 Utilizadores.hasMany(InscricoesOcorrencia, { foreignKey: 'id_utilizador' });
 InscricoesOcorrencia.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
 
 // PartilhasConhecimento -> NotificacoesForum
-PartilhasConhecimento.hasMany(NotificacoesForum, { foreignKey: 'id_partilha_conhecimento' });
-NotificacoesForum.belongsTo(PartilhasConhecimento, { foreignKey: 'id_partilha_conhecimento' });
+PartilhasConhecimento.hasMany(NotificacoesForum, { foreignKey: 'id_partilha' });
+NotificacoesForum.belongsTo(PartilhasConhecimento, { foreignKey: 'id_partilha' });
 
 // OcorrenciasCurso -> NotificacoesOcorrencia
-OcorrenciasCurso.hasMany(NotificacoesOcorrencia, { foreignKey: 'id_ocorrencia_curso' });
-NotificacoesOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia_curso' });
+OcorrenciasCurso.hasMany(NotificacoesOcorrencia, { foreignKey: 'id_ocorrencia' });
+NotificacoesOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 
 // OcorrenciasCurso -> Quizzes
-OcorrenciasCurso.hasMany(Quizzes, { foreignKey: 'id_ocorrencia_curso' });
-Quizzes.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia_curso' });
+OcorrenciasCurso.hasMany(Quizzes, { foreignKey: 'id_ocorrencia' });
+Quizzes.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 
 // Quizzes -> Perguntas
-Quizzes.hasMany(Perguntas, { foreignKey: 'id_quiz' });
-Perguntas.belongsTo(Quizzes, { foreignKey: 'id_quiz' });
+Quizzes.hasMany(Perguntas, { foreignKey: 'id_quizz' });
+Perguntas.belongsTo(Quizzes, { foreignKey: 'id_quizz' });
 
 // Perguntas -> Respostas
 Perguntas.hasMany(Respostas, { foreignKey: 'id_pergunta' });
@@ -148,16 +148,16 @@ Utilizadores.hasMany(SubmissoesQuizzes, { foreignKey: 'id_utilizador' });
 SubmissoesQuizzes.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
 
 // Quizzes -> SubmissoesQuizzes
-Quizzes.hasMany(SubmissoesQuizzes, { foreignKey: 'id_quiz' });
-SubmissoesQuizzes.belongsTo(Quizzes, { foreignKey: 'id_quiz' });
+Quizzes.hasMany(SubmissoesQuizzes, { foreignKey: 'id_quizz' });
+SubmissoesQuizzes.belongsTo(Quizzes, { foreignKey: 'id_quizz' });
 
 // OcorrenciasCurso -> TrabalhosOcorrencia
-OcorrenciasCurso.hasMany(TrabalhosOcorrencia, { foreignKey: 'id_ocorrencia_curso' });
-TrabalhosOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia_curso' });
+OcorrenciasCurso.hasMany(TrabalhosOcorrencia, { foreignKey: 'id_ocorrencia' });
+TrabalhosOcorrencia.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 
 // TrabalhosOcorrencia -> SubmissoesTrabalhos
-TrabalhosOcorrencia.hasMany(SubmissoesTrabalhos, { foreignKey: 'id_trabalho_ocorrencia' });
-SubmissoesTrabalhos.belongsTo(TrabalhosOcorrencia, { foreignKey: 'id_trabalho_ocorrencia' });
+TrabalhosOcorrencia.hasMany(SubmissoesTrabalhos, { foreignKey: 'id_trabalho' });
+SubmissoesTrabalhos.belongsTo(TrabalhosOcorrencia, { foreignKey: 'id_trabalho' });
 
 // Utilizadores -> SubmissoesTrabalhos
 Utilizadores.hasMany(SubmissoesTrabalhos, { foreignKey: 'id_utilizador' });

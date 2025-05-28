@@ -136,4 +136,68 @@ router.put('/:id', userController.updateUser);
  */
 router.delete('/:id', userController.deleteUser);
 
+
+/**
+ * @swagger
+ * /courses/{id}:
+ *   get:
+ *     summary: Obtém os cursos de um utilizador
+ *     tags:
+ *       - Utilizadores
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do utilizador
+ *     responses:
+ *       200:
+ *         description: Lista de cursos do utilizador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id_curso:
+ *                     type: integer
+ *                     example: 4
+ *                   titulo:
+ *                     type: string
+ *                     example: Sistemas Integrados com Arduino
+ *                   descricao:
+ *                     type: string
+ *                     example: Curso básico de automação e sistemas integrados com Arduino.
+ *                   id_topico:
+ *                     type: integer
+ *                     example: 8
+ *                   nome_topico:
+ *                     type: string
+ *                     example: Robótica e Automação
+ *                   url_capa:
+ *                     type: string
+ *                     example: ./assets/imagens/capas_curso/8
+ *                   url_icon:
+ *                     type: string
+ *                     example: ./assets/imagens/icones/8
+ *                   data_criacao:
+ *                     type: string
+ *                     format: date-time
+ *                   ultima_atualizacao:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Não autorizado
+ *       404:
+ *         description: Utilizador não encontrado
+ *       500:
+ *         description: Erro interno no servidor
+ */
+
+router.get('/courses/:id', authMiddleware, userController.getUserCourses);
+
 module.exports = router;

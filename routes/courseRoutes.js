@@ -140,4 +140,31 @@ router.put('/:id', courseController.updateCourse);
  */
 router.delete('/:id', courseController.deleteCourse);
 
+/**
+ * @swagger
+ * /api/courses/{id}/users:
+ *   get:
+ *     summary: Get users enrolled in course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Course ID
+ *     responses:
+ *       200:
+ *         description: List of users enrolled in course
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ */
+router.get('/:id/users', courseController.getUsersCourses);
+
 module.exports = router;
