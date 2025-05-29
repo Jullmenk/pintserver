@@ -6,6 +6,7 @@ const getAllUsers = async (req, res) => {
     const users = await Utilizadores.findAll({
       include: [{
         model: TipoUtilizador,
+        attributes: ['designacao']
       }]
     });
 
@@ -13,8 +14,13 @@ const getAllUsers = async (req, res) => {
     const usersData =  users.map(utilizador => {
       return {
         id_utilizador: utilizador.id_utilizador,
+        id_tipo_utilizador: utilizador.id_tipo_utilizador,
+        tipo_utilizador: utilizador.TipoUtilizador.designacao,
         nome: utilizador.nome,
         email: utilizador.email,
+        data_criacao: utilizador.data_criacao,
+        ultimo_login: utilizador.ultimo_login,
+        primeiro_login: utilizador.primeiro_login,
         url_foto_perfil: utilizador.url_foto_perfil,
         biografia: utilizador.biografia,
         departamento: utilizador.departamento,
@@ -45,25 +51,31 @@ const getUserById = async (req, res) => {
     const user = await Utilizadores.findByPk(req.params.id, {
       include: [{
         model: TipoUtilizador,
+        attributes: ['designacao']
       }]
     });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const usersData =  user.map(utilizador => {
-      return {
-        id_utilizador: utilizador.id_utilizador,
-        nome: utilizador.nome,
-        email: utilizador.email,
-        url_foto_perfil: utilizador.url_foto_perfil,
-        biografia: utilizador.biografia,
-        departamento: utilizador.departamento,
-        area_preferidas: utilizador.area_preferidas
+
+    const usersData =  {
+        id_utilizador: user.id_utilizador,
+        id_tipo_utilizador: user.id_tipo_utilizador,
+        tipo_utilizador: user.TipoUtilizador.designacao,
+        nome: user.nome,
+        email: user.email,
+        data_criacao: user.data_criacao,
+        ultimo_login: user.ultimo_login,
+        primeiro_login: user.primeiro_login,
+        url_foto_perfil: user.url_foto_perfil,
+        biografia: user.biografia,
+        departamento: user.departamento,
+        area_preferidas: user.area_preferidas
       };
-    });
 
     res.json(usersData);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: 'Error fetching user' });
   }
 };
