@@ -132,6 +132,7 @@ const getUserCourses = async (req, res) => {
         }]
       }]
     });
+
     const cursos = user.InscricoesOcorrencia.map(inscricao => {
       const curso = inscricao.OcorrenciasCurso?.Curso;
       return {
@@ -147,7 +148,10 @@ const getUserCourses = async (req, res) => {
       };
     }).filter(curso => curso); // Remove undefined
 
-    res.json(cursos);
+    if(cursos.length === 0){
+      return res.status(404).json({ error: 'Esse utilizador não tem nenhum curso inscrito.' });
+    }
+    res.json({nome: user.nome, cursos});
   } catch (error) {
     console.log(error)
     res.status(500).json({ error: 'Error fetching user courses' });

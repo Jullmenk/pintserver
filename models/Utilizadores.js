@@ -34,7 +34,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE
     },
     url_foto_perfil: {
-      type: DataTypes.STRING(1024)
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        url: "",
+        secure_url: ""
+      }
     },
     biografia: {
       type: DataTypes.STRING(1024)

@@ -1,6 +1,5 @@
 
 const nodemailer = require("nodemailer");
-const { render } = require("@react-email/render");
 const ConfirmEmail = require("./confirmationEmail");
 
 

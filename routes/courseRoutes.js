@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/courseController');
 const authMiddleware = require('../middleware/auth');
+const multer = require('multer')
+const upload = multer({dest:'uploads/'})
 
 /**
  * @swagger
@@ -82,7 +84,10 @@ router.get('/:id', courseController.getCourseById);
  *             schema:
  *               $ref: '#/components/schemas/Course'
  */
-router.post('/', courseController.createCourse);
+router.post('/',upload.fields([
+    { name: 'url_capa', maxCount: 1 },
+    { name: 'url_icon', maxCount: 1 }
+  ]),courseController.createCourse);
 
 /**
  * @swagger
@@ -115,7 +120,10 @@ router.post('/', courseController.createCourse);
  *       404:
  *         description: Course not found
  */
-router.put('/:id', courseController.updateCourse);
+router.put('/:id', upload.fields([
+    { name: 'url_capa', maxCount: 1 },
+    { name: 'url_icon', maxCount: 1 }
+  ]),courseController.updateCourse);
 
 /**
  * @swagger

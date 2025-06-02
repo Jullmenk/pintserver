@@ -1,4 +1,4 @@
-const { PartilhasConhecimento, Denuncias, NotificacoesForum } = require('../models');
+const { PartilhasConhecimento, Denuncias, NotificacoesForum, Respostas, Topicos } = require('../models');
 
 // Get all forum posts
 const getAllPosts = async (req, res) => {
@@ -9,8 +9,12 @@ const getAllPosts = async (req, res) => {
           model: Denuncias,
         },
         {
+          model: Topicos,
+          attributes: ['id_topico', 'titulo']
+        },
+        {
           model: NotificacoesForum,
-        }
+        },
       ]
     });
     res.json(posts);

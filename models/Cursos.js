@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     descricao: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(500),
       allowNull: false
     },
     estado: {
@@ -23,10 +23,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     url_capa: {
-      type: DataTypes.STRING(1024)
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        url: "",
+        secure_url: ""
+      }
     },
     url_icon: {
-      type: DataTypes.STRING(1024)
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        url: "",
+        secure_url: ""
+      }
     },
     data_criacao: {
       type: DataTypes.DATE,
