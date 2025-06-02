@@ -11,7 +11,25 @@ const getAllCourses = async (req, res) => {
         { model: OcorrenciasCurso }
       ]
     });
-    res.json(courses);
+
+    const coursesData = courses.map(course => {
+      return {
+        id_curso: course.id_curso,
+        id_topico: course.id_topico,
+        topico: course.Topico.titulo,
+        titulo: course.titulo,
+        estado: course.estado,
+        descricao: course.descricao,
+        url_capa: JSON.parse(course.url_capa).url,
+        url_icon: JSON.parse(course.url_icon).url,
+        data_criacao: course.data_criacao,
+        ultima_atualizacao: course.ultima_atualizacao,
+        Avaliacoes: course.Avaliacoes,
+        OcorrenciasCurso: course.OcorrenciasCurso
+      };
+    });
+
+    res.json(coursesData);
   } catch (error) {
     console.error('Erro ao buscar cursos:', error);
     res.status(500).json({ error: 'Error fetching courses' });
@@ -34,10 +52,25 @@ const getCourseById = async (req, res) => {
         }
       ]
     });
+
+    const courseData = {
+      id_curso: course.id_curso,
+      id_topico: course.id_topico,
+      topico: course.Topico.titulo,
+      titulo: course.titulo,
+      estado: course.estado,
+      descricao: course.descricao,
+      url_capa: JSON.parse(course.url_capa).url,
+      url_icon: JSON.parse(course.url_icon).url,
+      data_criacao: course.data_criacao,
+      ultima_atualizacao: course.ultima_atualizacao,
+      Avaliacoes: course.Avaliacoes,
+      OcorrenciasCurso: course.OcorrenciasCurso
+    };
     if (!course) {
       return res.status(404).json({ error: 'Course not found' });
     }
-    res.json(course);
+    res.json(courseData);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching course' });
   }
