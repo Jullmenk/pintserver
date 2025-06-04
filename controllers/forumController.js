@@ -5,21 +5,35 @@ const getAllPosts = async (req, res) => {
   try {
     const posts = await PartilhasConhecimento.findAll({
       include: [
-        {
-          model: Denuncias,
-        },
-        {
-          model: Topicos,
-          attributes: ['id_topico', 'titulo']
-        },
-        {
-          model: NotificacoesForum,
-        },
+        { model: Denuncias },
+        { model: Topicos, attributes: ['id_topico', 'titulo'] },
+        { model: NotificacoesForum },
       ]
     });
-    res.json(posts);
+
+    const mapaPartilhas = {};
+
+    posts.forEach(post => {
+      const p = post.get({ plain: true }); // 💡 Transforma em objeto puro
+
+      if (!p.sub_partilha) {
+        mapaPartilhas[p.id_partilha] = { ...p, comentarios: [] };
+      }
+    });
+
+    posts.forEach(post => {
+      const p = post.get({ plain: true });
+
+      if (p.sub_partilha) {
+        if (mapaPartilhas[p.sub_partilha]) {
+          mapaPartilhas[p.sub_partilha].comentarios.push(p);
+        }
+      }
+    });
+
+    res.json(Object.values(mapaPartilhas));
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ error: 'Error fetching forum posts' });
   }
 };

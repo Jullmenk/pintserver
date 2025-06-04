@@ -62,6 +62,61 @@ router.get('/', courseController.getAllCourses);
  */
 router.get('/:id', courseController.getCourseById);
 
+
+/**
+ * @swagger
+ * /api/courses/category/{id}:
+ *   get:
+ *     summary: Get courses by category ID
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Category ID
+ *     responses:
+ *       200:
+ *         description: List of courses by category
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Course'
+ */
+router.get('/category/:id', courseController.getCoursesByCategory);
+
+/**
+ * @swagger
+ * /api/courses/area/{id}:
+ *   get:
+ *     summary: Get courses by area ID
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Area ID
+ *     responses:
+ *       200:
+ *         description: List of courses by area
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Course'
+ */
+router.get('/area/:id', courseController.getCoursesByArea);
+
 /**
  * @swagger
  * /api/courses:

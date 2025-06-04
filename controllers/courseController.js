@@ -1,4 +1,4 @@
-const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia } = require('../models');
+const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia, Areas, Categorias } = require('../models');
 const cloudinary = require('../config/cloudinary');
 
 
@@ -6,35 +6,111 @@ const getAllCourses = async (req, res) => {
   try {
     const courses = await Cursos.findAll({
       include: [
-        { model: Topicos },
+        {
+          model: Topicos,
+          include: [
+            {
+              model: Areas,
+              include: [
+                {
+                  model: Categorias
+                }
+              ]
+            }
+          ]
+        },
         { model: Avaliacoes },
         { model: OcorrenciasCurso }
       ]
     });
-
-    const coursesData = courses.map(course => {
-      return {
-        id_curso: course.id_curso,
-        id_topico: course.id_topico,
-        topico: course.Topico.titulo,
-        titulo: course.titulo,
-        estado: course.estado,
-        descricao: course.descricao,
-        url_capa: JSON.parse(course.url_capa).url,
-        url_icon: JSON.parse(course.url_icon).url,
-        data_criacao: course.data_criacao,
-        ultima_atualizacao: course.ultima_atualizacao,
-        Avaliacoes: course.Avaliacoes,
-        OcorrenciasCurso: course.OcorrenciasCurso
-      };
-    });
-
-    res.json(coursesData);
+    res.json(courses);
   } catch (error) {
     console.error('Erro ao buscar cursos:', error);
     res.status(500).json({ error: 'Error fetching courses' });
   }
 };
+
+
+const getCoursesByCategory = async (req, res) => {
+  try {
+    const courses = await Cursos.findAll({
+      include: [
+        {
+          model: Topicos,
+          include: [
+            {
+              model: Areas,
+              include: [
+                {
+                  model: Categorias,
+                  where: {
+                    id_categoria: req.params.id
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        { model: Avaliacoes },
+        { model: OcorrenciasCurso }
+      ],
+    });
+    res.json(courses);
+  } catch (error) {
+    console.error('Erro ao buscar cursos:', error);
+    res.status(500).json({ error: 'Error fetching courses' });
+  }
+};
+
+const getCoursesByArea = async (req, res) => {
+  try {
+    const courses = await Cursos.findAll({
+      include: [
+        {
+          model: Topicos,
+          include: [
+            {
+              model: Areas,
+              where: {
+                id_area: req.params.id
+              },
+              include: [
+                {
+                  model: Categorias
+                }
+              ]
+            }
+          ]
+        },
+        { model: Avaliacoes },
+        { model: OcorrenciasCurso }
+      ],
+    });
+    res.json(courses);
+  } catch (error) {
+    console.error('Erro ao buscar cursos:', error);
+    res.status(500).json({ error: 'Error fetching courses' });
+  }
+};
+
+// getAllCOurses
+
+    // const coursesData = courses.map(course => {
+    //   return {
+    //     id_curso: course.id_curso,
+    //     id_topico: course.id_topico,
+    //     topico: course.Topico.titulo,
+    //     titulo: course.titulo,
+    //     estado: course.estado,
+    //     descricao: course.descricao,
+    //     url_capa: JSON.parse(course.url_capa).url,
+    //     url_icon: JSON.parse(course.url_icon).url,
+    //     data_criacao: course.data_criacao,
+    //     ultima_atualizacao: course.ultima_atualizacao,
+    //     Avaliacoes: course.Avaliacoes,
+    //     OcorrenciasCurso: course.OcorrenciasCurso
+    //   };
+    // });
 
 // Get course by ID
 const getCourseById = async (req, res) => {
@@ -235,5 +311,7 @@ module.exports = {
   createCourse,
   updateCourse,
   deleteCourse,
-  getUsersCourses
+  getUsersCourses,
+  getCoursesByCategory,
+  getCoursesByArea
 };
