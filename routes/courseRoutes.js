@@ -237,7 +237,7 @@ router.get('/:id/users', courseController.getUsersCourses);
  *     summary: Inscreve um utilizador numa ocorrência de curso
  *     description: Inscreve um utilizador na ocorrência de curso especificada. A inscrição só ocorre se o utilizador e a ocorrência existirem e se ele ainda não estiver inscrito.
  *     tags:
- *       - Inscrições
+ *       - [Courses]
  *     parameters:
  *       - name: id
  *         in: path
@@ -336,7 +336,7 @@ router.post('/:id/users', courseController.addUserCourse);
  *     summary: Remove um utilizador de uma ocorrência de curso
  *     description: Cancela a inscrição de um utilizador numa ocorrência específica de curso.
  *     tags:
- *       - Inscrições
+ *       - [Courses]
  *     parameters:
  *       - name: id
  *         in: path
