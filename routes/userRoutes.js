@@ -139,11 +139,10 @@ router.delete('/:id', userController.deleteUser);
 
 /**
  * @swagger
- * /courses/{id}:
+ * /api/users/courses/{id}:
  *   get:
  *     summary: Obtém os cursos de um utilizador
- *     tags:
- *       - Utilizadores
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
