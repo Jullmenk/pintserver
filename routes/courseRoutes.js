@@ -230,4 +230,169 @@ router.delete('/:id', courseController.deleteCourse);
  */
 router.get('/:id/users', courseController.getUsersCourses);
 
+/**
+ * @swagger
+ * /api/courses/{id}/users:
+ *   post:
+ *     summary: Inscreve um utilizador numa ocorrência de curso
+ *     description: Inscreve um utilizador na ocorrência de curso especificada. A inscrição só ocorre se o utilizador e a ocorrência existirem e se ele ainda não estiver inscrito.
+ *     tags:
+ *       - Inscrições
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: ID do curso
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 12
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id_utilizador
+ *               - id_ocorrencia
+ *             properties:
+ *               id_utilizador:
+ *                 type: integer
+ *                 example: 1
+ *               id_ocorrencia:
+ *                 type: integer
+ *                 example: 2
+ *     responses:
+ *       201:
+ *         description: Inscrição realizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Curso adicionado com sucesso
+ *       400:
+ *         description: Utilizador já está inscrito nesta ocorrência
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Já está inscrito nesta ocorrência
+ *       401:
+ *         description: Utilizador não verificado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Utilizador não verificado
+ *       402:
+ *         description: Apenas formandos podem inscrever-se a um curso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Apenas formandos podem inscrever-se a um curso
+ * 
+ *       404:
+ *         description: Utilizador ou ocorrência não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Ocorrência não encontrada
+ *       500:
+ *         description: Erro ao tentar inscrever
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Erro ao adicionar curso
+ */
+
+router.post('/:id/users', courseController.addUserCourse);
+
+
+/**
+ * @swagger
+ * /api/courses/{id}/users:
+ *   delete:
+ *     summary: Remove um utilizador de uma ocorrência de curso
+ *     description: Cancela a inscrição de um utilizador numa ocorrência específica de curso.
+ *     tags:
+ *       - Inscrições
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID do curso
+ *         schema:
+ *           type: integer
+ *           example: 12
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id_utilizador
+ *               - id_ocorrencia
+ *             properties:
+ *               id_utilizador:
+ *                 type: integer
+ *                 example: 1
+ *               id_ocorrencia:
+ *                 type: integer
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Utilizador removido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Utilizador removido da ocorrência com sucesso
+ *       404:
+ *         description: Inscrição não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Inscrição não encontrada
+ *       500:
+ *         description: Erro ao remover inscrição
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Erro ao remover utilizador da ocorrência
+ */
+
+router.delete('/:id/users', courseController.removeUserFromCourse);
 module.exports = router;

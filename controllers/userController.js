@@ -127,7 +127,7 @@ const getUserCourses = async (req, res) => {
           model: OcorrenciasCurso,
           include: [{
             model: Cursos,
-            include: [Topicos]  // <- Aqui é onde incluímos o nome do tópico
+            include: [Topicos]
           }]
         }]
       }]
@@ -137,16 +137,16 @@ const getUserCourses = async (req, res) => {
       const curso = inscricao.OcorrenciasCurso?.Curso;
       return {
         id_curso: curso?.id_curso,
-        titulo: curso?.titulo?.trim(),  // remover espaços
+        titulo: curso?.titulo?.trim(),  
         descricao: curso?.descricao,
         id_topico: curso?.id_topico,
-        nome_topico: curso?.Topico?.nome?.trim(),  // Aqui buscamos o nome do tópico
+        nome_topico: curso?.Topico?.nome?.trim(),  
         url_capa: curso?.url_capa,
         url_icon: curso?.url_icon,
         data_criacao: curso?.data_criacao,
         ultima_atualizacao: curso?.ultima_atualizacao
       };
-    }).filter(curso => curso); // Remove undefined
+    }).filter(curso => curso); 
 
     if(cursos.length === 0){
       return res.status(404).json({ error: 'Esse utilizador não tem nenhum curso inscrito.' });
@@ -158,11 +158,12 @@ const getUserCourses = async (req, res) => {
   }
 };
 
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
   getAllUsersType,
-  getUserCourses
+  getUserCourses,  
 };

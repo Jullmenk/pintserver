@@ -89,6 +89,7 @@ router.post('/register', authController.register);
  *             required:
  *               - email
  *               - passe
+ *               - logintype
  *             properties:
  *               email:
  *                 type: string
@@ -98,6 +99,9 @@ router.post('/register', authController.register);
  *                 type: string
  *                 format: password
  *                 description: User's password
+ *               logintype:
+ *                 type: string
+ *                 description: User's login type, in case of formando if they want to switch and login as a formando to access the formando section like subscribe to a course
  *     responses:
  *       200:
  *         description: User logged in successfully

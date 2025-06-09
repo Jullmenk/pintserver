@@ -37,7 +37,7 @@ const register = async (req, res) => {
       id_tipo_utilizador
     });
 
-    const now = Math.floor(Date.now() / 1000); // em segundos
+    const now = Math.floor(Date.now() / 1000); 
     const expiresInSeconds = 24 * 60 * 60;
 
     const userToken = jwt.sign(
@@ -66,9 +66,9 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, passe } = req.body;
+    const { email, passe, logintype } = req.body;
 
-    // Find user
+
     const user = await Utilizadores.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -77,8 +77,7 @@ const login = async (req, res) => {
     if(user.primeiro_login == null){
       return res.status(401).json({ error: 'Utilizador nao verificado' });
     }
-
-    // Validate password
+    
     const isValidPassword = await bcrypt.compare(passe, user.passe);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -90,11 +89,19 @@ const login = async (req, res) => {
       user.ultimo_login = new Date();
       await user.save();
     }
+
+    let type;
+    if(logintype === 'formando'){
+      type = 3;
+    }else{
+      type = user.id_tipo_utilizador;
+    }
     
     const token = jwt.sign(
       {
         id: user.id_utilizador,
         exp: now + expiresInSeconds,
+        tipo_utilizador: type
       },
       process.env.JWT_SECRET
     );
@@ -104,7 +111,7 @@ const login = async (req, res) => {
         id: user.id_utilizador,
         nome: user.nome,
         email: user.email,
-        tipo_utilizador: user.id_tipo_utilizador
+        tipo_utilizador: type
       },
       token
     });

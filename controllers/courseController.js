@@ -305,6 +305,74 @@ const getUsersCourses = async (req, res) => {
   }
 };
 
+// Add user course
+
+const addUserCourse = async (req, res) => {
+  try {
+    const { id_utilizador, id_ocorrencia, tipo_utilizador } = req.body;
+    const user = await Utilizadores.findByPk(id_utilizador);
+    if (!user) {
+      return res.status(404).json({ error: 'Utilizador nao encontrado' });
+    }
+
+    if(tipo_utilizador !== 3){
+      return res.status(402).json({ error: 'Apenas formandos podem inscrever-se a um curso' });
+    }
+
+    if(user.primeiro_login == null){
+      return res.status(401).json({ error: 'Utilizador nao verificado' });
+    }
+
+    const ocorrencia = await OcorrenciasCurso.findByPk(id_ocorrencia);
+    if (!ocorrencia) {
+      return res.status(404).json({ error: 'Ocorrência não encontrada' });
+    }
+
+    const jaInscrito = await InscricoesOcorrencia.findOne({
+      where: { id_utilizador, id_ocorrencia }
+    });
+    if (jaInscrito) {
+      return res.status(400).json({ error: 'Já está inscrito nesta ocorrência' });
+    }
+
+    const novaInscricao = await InscricoesOcorrencia.create({
+      id_utilizador,
+      id_ocorrencia,
+      data_inscricao: new Date(),
+      estado: 0 
+    });
+
+    if(novaInscricao){
+      return res.status(201).json({ message: 'Utilizador adicionado à ocorrência com sucesso' });
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Erro ao adicionar utilizador a ocorrência' });
+  }
+};
+
+const removeUserFromCourse = async (req, res) => {
+  try {
+    const { id_ocorrencia, id_utilizador } = req.body;
+    console.log("***id_ocorrencia",id_ocorrencia,"id_utilizador", id_utilizador);
+    const inscricao = await InscricoesOcorrencia.findOne({
+      where: { id_utilizador, id_ocorrencia }
+    });
+
+    if (!inscricao) {
+      return res.status(404).json({ error: 'Inscrição não encontrada' });
+    }
+
+    await inscricao.destroy();
+
+    return res.status(200).json({ message: 'Utilizador removido da ocorrência com sucesso' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Erro ao remover utilizador da ocorrência' });
+  }
+};
+
+
 module.exports = {
   getAllCourses,
   getCourseById,
@@ -313,5 +381,7 @@ module.exports = {
   deleteCourse,
   getUsersCourses,
   getCoursesByCategory,
-  getCoursesByArea
+  getCoursesByArea,
+  addUserCourse,
+  removeUserFromCourse
 };
