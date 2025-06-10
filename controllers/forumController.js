@@ -40,22 +40,40 @@ const getAllPosts = async (req, res) => {
 
 // Get post by ID
 const getPostById = async (req, res) => {
-  try {
-    const post = await PartilhasConhecimento.findByPk(req.params.id, {
-      include: [
-        {
-          model: Denuncias,
-          },
-        {
-          model: NotificacoesForum,
-        }
-      ]
-    });
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+  try { const posts = await PartilhasConhecimento.findAll({
+    include: [
+      { model: Denuncias },
+      { model: Topicos, attributes: ['id_topico', 'titulo'] },
+      { model: NotificacoesForum },
+    ]
+  });
+
+  const mapaPartilhas = {};
+
+  posts.forEach(post => {
+    const p = post.get({ plain: true }); // 💡 Transforma em objeto puro
+
+    if (!p.sub_partilha) {
+      mapaPartilhas[p.id_partilha] = { ...p, comentarios: [] };
     }
-    res.json(post);
+  });
+
+  posts.forEach(post => {
+    const p = post.get({ plain: true });
+
+    if (p.sub_partilha) {
+      if (mapaPartilhas[p.sub_partilha]) {
+        mapaPartilhas[p.sub_partilha].comentarios.push(p);
+      }
+    }
+  });
+  const post = mapaPartilhas[parseInt(req.params.id)];
+  if (!post) {
+    return res.status(404).json({ error: 'Post nao encontrado' });
+  }
+  res.json(post);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Error fetching post' });
   }
 };
