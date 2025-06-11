@@ -91,6 +91,16 @@ Contudos.belongsTo(OcorrenciasCurso, { foreignKey: 'id_ocorrencia' });
 Topicos.hasMany(PartilhasConhecimento, { foreignKey: 'id_topico' });
 PartilhasConhecimento.belongsTo(Topicos, { foreignKey: 'id_topico' });
 
+PartilhasConhecimento.hasMany(PartilhasConhecimento, {
+    foreignKey: 'sub_partilha',
+    as: 'comentarios'
+  });
+  
+  PartilhasConhecimento.belongsTo(PartilhasConhecimento, {
+    foreignKey: 'sub_partilha',
+    as: 'parent'
+  });
+
 // Utilizadores -> PartilhasConhecimento
 Utilizadores.hasMany(PartilhasConhecimento, { foreignKey: 'id_utilizador' });
 PartilhasConhecimento.belongsTo(Utilizadores, { foreignKey: 'id_utilizador' });
