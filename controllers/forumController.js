@@ -3,26 +3,23 @@ const { PartilhasConhecimento, Denuncias, NotificacoesForum, Respostas, Topicos 
 // Get all forum posts
 const getAllPosts = async (req, res) => {
   try {
-    const posts = await PartilhasConhecimento.findAll({
-      where: { sub_partilha: null }, // apenas postagens principais
-      include: [
-        { 
-          model: PartilhasConhecimento,
-          as: 'comentarios',
-          include: [
-            { model: Denuncias },
-            { model: Topicos },
-            { model: NotificacoesForum }
-          ]
-        },
-        { model: Topicos },
-        { model: NotificacoesForum },
-        { model: Denuncias }
-      ],
+    const allPosts = await PartilhasConhecimento.findAll({
+      include: [Denuncias, Topicos, NotificacoesForum],
       order: [['id_partilha', 'ASC']]
-    })
-
-    res.json(posts);
+    });
+    
+    function buildTree(items, parentId = null) {
+      return items
+        .filter(item => item.sub_partilha === parentId)
+        .map(item => ({
+          ...item.toJSON(),
+          comentarios: buildTree(items, item.id_partilha)
+        }));
+    }
+    
+    const tree = buildTree(allPosts, null);
+    res.json(tree);
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error fetching forum posts' });
@@ -31,38 +28,30 @@ const getAllPosts = async (req, res) => {
 
 // Get post by ID
 const getPostById = async (req, res) => {
-  try { const posts = await PartilhasConhecimento.findAll({
-    include: [
-      { model: Denuncias },
-      { model: Topicos, attributes: ['id_topico', 'titulo'] },
-      { model: NotificacoesForum },
-    ]
-  });
-
-  const mapaPartilhas = {};
-
-  posts.forEach(post => {
-    const p = post.get({ plain: true }); // 💡 Transforma em objeto puro
-
-    if (!p.sub_partilha) {
-      mapaPartilhas[p.id_partilha] = { ...p, comentarios: [] };
+  try { 
+    const allPosts = await PartilhasConhecimento.findAll({
+      include: [Denuncias, Topicos, NotificacoesForum],
+      order: [['id_partilha', 'ASC']]
+    });
+    
+    function buildTree(items, parentId = null) {
+      return items
+        .filter(item => item.sub_partilha === parentId)
+        .map(item => ({
+          ...item.toJSON(),
+          comentarios: buildTree(items, item.id_partilha)
+        }));
     }
-  });
+    
+    const tree = buildTree(allPosts, null);
+    const post = tree.find(post => post.id_partilha === parseInt(req.params.id));
 
-  posts.forEach(post => {
-    const p = post.get({ plain: true });
-
-    if (p.sub_partilha) {
-      if (mapaPartilhas[p.sub_partilha]) {
-        mapaPartilhas[p.sub_partilha].comentarios.push(p);
-      }
+    if(!post){
+      return res.status(404).json({ error: 'Post não encontrado' });
     }
-  });
-  const post = mapaPartilhas[parseInt(req.params.id)];
-  if (!post) {
-    return res.status(404).json({ error: 'Post nao encontrado' });
-  }
-  res.json(post);
+
+    res.json(post);
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error fetching post' });
