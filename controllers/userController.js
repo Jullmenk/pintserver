@@ -1,5 +1,5 @@
 const { Utilizadores, TipoUtilizador, Cursos, InscricoesOcorrencia, OcorrenciasCurso, Topicos } = require('../models');
-
+const cloudinary = require('../config/cloudinary');
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
@@ -32,16 +32,18 @@ const getAllUsers = async (req, res) => {
     res.json(usersData);
   } catch (error) {
     console.log(error)
-    res.status(500).json({ error: 'Error fetching users' });
+    res.status(500).json({ error: 'Erro ao buscar utilizadores' });
   }
 };
+
+// Get all users type
 const getAllUsersType = async (req, res) => {
   try {
     const users = await TipoUtilizador.findAll()
     res.json(users);
   } catch (error) {
     console.log(error)
-    res.status(500).json({ error: 'Error fetching users' });
+    res.status(500).json({ error: 'Erro ao buscar tipos de utilizadores' });
   }
 };
 
@@ -55,7 +57,7 @@ const getUserById = async (req, res) => {
       }]
     });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
     }
 
     const usersData =  {
@@ -76,7 +78,7 @@ const getUserById = async (req, res) => {
     res.json(usersData);
   } catch (error) {
     console.log(error)
-    res.status(500).json({ error: 'Error fetching user' });
+    res.status(500).json({ error: 'Erro ao buscar utilizador' });
   }
 };
 
@@ -85,20 +87,37 @@ const updateUser = async (req, res) => {
   try {
     const user = await Utilizadores.findByPk(req.params.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
     }
 
     const { nome, email, id_tipo_utilizador } = req.body;
+
+    let {url_foto_perfil } = req.body
+    const profilepic = req.files['url_foto_perfil']?.[0];
+    
+    if(profilepic){
+      const uploadResponse = await cloudinary.uploader.upload(profilepic.path, {
+        upload_preset: "pint",
+      });
+      if(uploadResponse){
+        await cloudinary.uploader.destroy(user.url_foto_perfil.secure_url);
+      }
+      url_foto_perfil = {
+        secure_url: uploadResponse.secure_url,
+        url: uploadResponse.url,
+      }
+    }
     
     await user.update({
       nome,
       email,
-      id_tipo_utilizador
+      id_tipo_utilizador,
+      url_foto_perfil
     });
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating user' });
+    res.status(500).json({ error: 'Erro ao actualizar utilizador' });
   }
 };
 
@@ -107,13 +126,17 @@ const deleteUser = async (req, res) => {
   try {
     const user = await Utilizadores.findByPk(req.params.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
+    }
+
+    if(user.url_foto_perfil.secure_url){
+      await cloudinary.uploader.destroy(user.url_foto_perfil.secure_url);
     }
 
     await user.destroy();
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'Utilizador eliminado com sucesso' });
   } catch (error) {
-    res.status(500).json({ error: 'Error deleting user' });
+    res.status(500).json({ error: 'Erro ao eliminar utilizador' });
   }
 };
 
@@ -154,7 +177,7 @@ const getUserCourses = async (req, res) => {
     res.json({nome: user.nome, cursos});
   } catch (error) {
     console.log(error)
-    res.status(500).json({ error: 'Error fetching user courses' });
+    res.status(500).json({ error: 'Erro ao buscar cursos do utilizador' });
   }
 };
 

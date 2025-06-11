@@ -47,7 +47,7 @@ const getPostById = async (req, res) => {
     const post = tree.find(post => post.id_partilha === parseInt(req.params.id));
 
     if(!post){
-      return res.status(404).json({ error: 'Post não encontrado' });
+      return res.status(404).json({ error: 'Comentário não encontrado' });
     }
 
     res.json(post);
@@ -69,6 +69,7 @@ const createPost = async (req, res) => {
       titulo,
       conteudo
     });
+    
     res.status(201).json(post);
   } catch (error) {
     res.status(500).json({ error: 'Error creating post' });
@@ -80,7 +81,7 @@ const updatePost = async (req, res) => {
   try {
     const post = await PartilhasConhecimento.findByPk(req.params.id);
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: 'Comentário não encontrado' });
     }
 
     const { titulo, conteudo } = req.body;
@@ -101,11 +102,11 @@ const deletePost = async (req, res) => {
   try {
     const post = await PartilhasConhecimento.findByPk(req.params.id);
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: 'Comentário não encontrado' });
     }
 
     await post.destroy();
-    res.json({ message: 'Post deleted successfully' });
+    res.json({ message: 'Comentário eliminado com sucesso' });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting post' });
   }

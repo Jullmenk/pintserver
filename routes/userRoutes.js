@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/auth');
+const multer = require('multer')
+const upload = multer({dest:'uploads/'})
 
 /**
  * @swagger
@@ -111,7 +113,9 @@ router.get('/:id', userController.getUserById);
  *       404:
  *         description: User not found
  */
-router.put('/:id', userController.updateUser);
+router.put('/:id', upload.fields([
+    { name: 'url_foto_perfil', maxCount: 1 }
+  ]),userController.updateUser);
 
 /**
  * @swagger
