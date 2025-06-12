@@ -293,7 +293,7 @@ router.get('/:id/users', courseController.getUsersCourses);
  *                 error:
  *                   type: string
  *                   example: Utilizador não verificado
- *       402:
+ *       403:
  *         description: Apenas formandos podem inscrever-se a um curso
  *         content:
  *           application/json:
