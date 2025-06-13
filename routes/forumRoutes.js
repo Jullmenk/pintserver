@@ -73,7 +73,23 @@ router.get('/:id', forumController.getPostById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ForumPost'
+ *             type: object
+ *             properties:
+ *               id_topico:
+ *                 type: integer
+ *                 description: Topic ID
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: User ID
+ *               sub_partilha:
+ *                 type: integer
+ *                 description: Sub-partilha ID
+ *               titulo:
+ *                 type: string
+ *                 description: Post title
+ *               conteudo:
+ *                 type: string
+ *                 description: Post content
  *     responses:
  *       201:
  *         description: Forum post created successfully
