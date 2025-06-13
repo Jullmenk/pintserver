@@ -76,6 +76,33 @@ const createPost = async (req, res) => {
   }
 };
 
+const denouncePost = async (req, res) => {
+  try {
+    const { id_partilha, id_utilizador, descricao } = req.body;
+
+    const post = await PartilhasConhecimento.findByPk(id_partilha);
+    if (!post) {
+      return res.status(404).json({ error: 'Comentário não encontrado' });
+    }
+    const denunciado = post.denunciado + 1;
+    await post.update({
+      denunciado
+    });
+
+    await post.save();
+
+    const denounce = await Denuncias.create({
+      id_partilha,
+      id_utilizador,
+      descricao
+    });
+    
+    res.status(201).json(denounce);
+  } catch (error) {
+    res.status(500).json({ error: 'Error denouncing post' });
+  }
+};
+
 // Update forum post
 const updatePost = async (req, res) => {
   try {
@@ -133,5 +160,6 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
-  createNotification
+  createNotification,
+  denouncePost
 };

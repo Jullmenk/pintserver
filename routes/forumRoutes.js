@@ -191,4 +191,51 @@ router.delete('/:id', forumController.deletePost);
  */
 router.post('/:id/notifications', forumController.createNotification);
 
+/** 
+ * @swagger
+ * 
+ * /api/forum/denounce:
+ *   post:
+ *     summary: Denounce forum post
+ *     tags: [Forum]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_partilha:
+ *                 type: integer
+ *                 description: Post ID
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: User ID
+ *               descricao:
+ *                 type: string
+ *                 description: Denouncement description
+ *     responses:
+ *       201:
+ *         description: Denouncement created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 id_partilha:
+ *                   type: integer
+ *                 id_utilizador:
+ *                   type: integer
+ *                 descricao:
+ *                   type: string
+ *                 data_criacao:
+ *                   type: string
+ *                   format: date-time
+ */
+router.post('/denounce', forumController.denouncePost);
+
 module.exports = router;
