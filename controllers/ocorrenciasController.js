@@ -1,4 +1,7 @@
-const { Cursos, OcorrenciasCurso, Utilizadores, NotificacoesOcorrencia } = require('../models');
+const { Cursos, OcorrenciasCurso, Utilizadores, NotificacoesOcorrencia, SubmissoesTrabalhos, InscricoesOcorrencia, TrabalhosOcorrencia } = require('../models');
+const cloudinary = require('../config/cloudinary');
+const path = require('path');
+const { notifyUser } = require('../email/email');
 
 /* cursos estados : 1 - ativo | 0 - inativo
 ocorrencias estados : 1 - ativo | 0 - inativo
@@ -175,8 +178,107 @@ const updateOcorrencia = async (req, res) => {
   }
 }
 
+const submeterTrabalho = async (req,res)=>{
+  const {id_ocorrencia, id_trabalho} = req.params;
+  const {id_utilizador} = req.body;
+  let url_pdf = null;
+
+  const ocorrencia = await OcorrenciasCurso.findByPk(id_ocorrencia);
+  if (!ocorrencia) {
+    return res.status(404).json({ error: 'Ocorrência nao encontrada' });
+  }
+
+  const trabalhoOcorrencia = await TrabalhosOcorrencia.findByPk(id_trabalho);
+  if (!trabalhoOcorrencia) {
+    return res.status(404).json({ error: 'Trabalho nao encontrado' });
+  }
+
+  const user = await Utilizadores.findByPk(id_utilizador,{include: [{model: InscricoesOcorrencia, where: {id_ocorrencia}}]});
+  if (!user) {
+    return res.status(404).json({ error: 'Utilizador nao encontrado' });
+  }
+
+  if(user.InscricoesOcorrencia.length === 0){
+    return res.status(400).json({ error: 'Utilizador nao inscrito na ocorrência' });
+  }
+
+  const pdfFile = req.files['url_pdf']?.[0];
+
+  if(pdfFile){
+
+      const fileExtension = pdfFile.originalname.slice(-4).toLowerCase();
+      if (fileExtension !== '.pdf') {
+        return res.status(400).json({ error: 'Arquivo inválido, deve ser .pdf' });
+      }
+
+      const uploadResponse = await cloudinary.uploader.upload(pdfFile.path, {
+        resource_type: 'raw',
+        public_id: `docs/${path.parse(pdfFile.originalname).name}.pdf`, 
+        upload_preset: 'pint'
+      });
+      
+
+      url_pdf = {
+        secure_url: uploadResponse.secure_url,
+        url: uploadResponse.url,
+      }
+    
+    const trabalhoSubmetido = await SubmissoesTrabalhos.create({
+      id_utilizador,
+      id_trabalho,
+      url_trabalho: url_pdf
+    })
+
+    res.status(200).json({
+      message: "Trabalho submetido com sucesso, aguarde a avaliação do professor",
+      trabalhoSubmetido
+    });
+
+  }else{
+    return res.status(400).json({ error: 'Submeta o ficheiro do trabalho em pdf' });
+  }
+}
+
+const avaliarTrabalho = async (req,res)=>{
+  const {id_submissao_trabalho} = req.params;
+  const {id_docente, nota, feedback} = req.body;
+
+
+  const docente = await Utilizadores.findByPk(id_docente);
+  if (!docente) {
+    return res.status(404).json({ error: 'Docente nao encontrado' });
+  }
+
+  if(docente.id_tipo_utilizador !== 2){
+    return res.status(403).json({ error: 'Apenas Formadores podem avaliar trabalhos' });
+  }
+
+  const submissaoTrabalho = await SubmissoesTrabalhos.findByPk(id_submissao_trabalho);
+  if (!submissaoTrabalho) {
+    return res.status(404).json({ error: 'Submissao de trabalho nao encontrada' });
+  }
+
+  const trabalhoSubmetidoAvaliado = await submissaoTrabalho.update({
+    pontuacao: nota,
+    feedback
+  })
+
+  const user = await Utilizadores.findByPk(submissaoTrabalho.id_utilizador);
+
+  if(user){
+    notifyUser(user.email, `Olá ${user.nome}, O seu trabalho foi avaliado`, `Estamos a enviar esse email para informar que o seu trabalho foi avaliado`,`O seu trabalho foi avaliado com a nota de ${nota} ${feedback?`e o docente deixou o seguinte feedback: ${feedback}`:""}`)
+  }
+
+  res.status(200).json({
+    message: "Trabalho avaliado com sucesso",
+    trabalhoSubmetidoAvaliado
+  });
+}
+
 module.exports = {
   createOcorrencia,
   updateOcorrencia,
-  deleteOcorrencia
+  deleteOcorrencia,
+  submeterTrabalho,
+  avaliarTrabalho
 };

@@ -70,14 +70,6 @@ const createPost = async (req, res) => {
     let url_imagem = null;
     let conteudo_pdf = null;
     let conteudo_imagem = null;
-
-    
-    //teste
-    id_topico = 1;
-    id_utilizador = 4;
-    sub_partilha = null;
-    titulo = 'Teste';
-    conteudo = 'Teste conteudo';
     
     if(pdfFile){
 

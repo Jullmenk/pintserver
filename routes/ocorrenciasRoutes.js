@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { createOcorrencia, updateOcorrencia, deleteOcorrencia } = require('../controllers/ocorrenciasController');
+const { createOcorrencia, updateOcorrencia, deleteOcorrencia, submeterTrabalho, avaliarTrabalho } = require('../controllers/ocorrenciasController');
+const multer = require('multer')
+const upload = multer({dest:'uploads/'})
 
 /**
  * @swagger
@@ -152,5 +154,92 @@ router.delete('/:id', deleteOcorrencia);
  *         description: Erro interno do servidor
  */
 router.put('/:id', updateOcorrencia);
+
+/**
+ * @swagger
+ * /api/ocorrencias/{id_ocorrencia}/submeter-trabalho/{id_trabalho}:
+ *   post:
+ *     summary: Submeter um trabalho para uma ocorrência
+ *     description: Submeter um trabalho para uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_ocorrencia
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da ocorrência para a qual o trabalho está sendo submetido
+ *       - in: path
+ *         name: id_trabalho
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do trabalho a ser submetido
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: ID do utilizador que está a submeter o trabalho
+ *     responses:
+ *       200:
+ *         description: Trabalho submetido com sucesso
+ *       404:
+ *         description: Ocorrência ou trabalho não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.post('/:id_ocorrencia/submeter-trabalho/:id_trabalho', 
+    upload.fields([{ name: 'url_pdf', maxCount: 1 }]), submeterTrabalho);
+
+
+/** 
+ * @swagger 
+ * 
+ * /api/ocorrencias/avaliar-trabalho/{id_submissao_trabalho}:
+ *   put:
+ *     summary: Avaliar um trabalho submetido para uma ocorrência
+ *     description: Avaliar um trabalho submetido para uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_submissao_trabalho
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da submissão de trabalho a ser avaliada
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_docente:
+ *                 type: integer
+ *                 description: ID do docente que está avaliando o trabalho
+ *               nota:
+ *                 type: integer
+ *                 description: Nota atribuída ao trabalho
+ *               feedback:
+ *                 type: string
+ *                 description: Feedback fornecido ao aluno
+ *     responses:
+ *       200:
+ *         description: Trabalho avaliado com sucesso e envio de email ao utilizador
+ *       404:
+ *         description: Submissão de trabalho ou ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.put('/avaliar-trabalho/:id_submissao_trabalho', avaliarTrabalho);
 
 module.exports = router;
