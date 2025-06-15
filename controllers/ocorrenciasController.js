@@ -1,4 +1,4 @@
-const { Cursos, OcorrenciasCurso, Utilizadores } = require('../models');
+const { Cursos, OcorrenciasCurso, Utilizadores, NotificacoesOcorrencia } = require('../models');
 
 /* cursos estados : 1 - ativo | 0 - inativo
 ocorrencias estados : 1 - ativo | 0 - inativo
@@ -151,7 +151,24 @@ const updateOcorrencia = async (req, res) => {
       horario
     });
 
-    res.json(ocorrencia);
+    const inscricoes = await InscricoesOcorrencia.findAll({
+      where: { id_ocorrencia }
+    });
+
+    if(inscricoes){
+      for (const inscricao of inscricoes) {
+        const user = await Utilizadores.findByPk(inscricao.id_utilizador);
+        notifyUser(user.email, `Olá ${user.nome}, houve uma alteração na ocorrência que está inscrito`, `Estamos a enviar esse email para informar que houve uma alteração na ocorrência que está inscrito do curso ${curso.titulo}, por favor verifique os dados da ocorrência.`,``)
+      }
+    }
+
+    const Notificacoes = await NotificacoesOcorrencia.create({
+      titulo: "Alteração na ocorrência",
+      conteudo: `Houve uma alteração na ocorrência que está inscrito do curso ${curso.titulo}, por favor verifique os dados da ocorrência.`,
+      id_ocorrencia,
+    })
+
+    res.json({ocorrencia, Notificacoes});
   } catch (error) {
     console.error('Erro ao actualizar ocorrência:', error);
     res.status(500).json({ error: 'Error updating ocorrencia' });

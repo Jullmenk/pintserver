@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const forumController = require('../controllers/forumController');
 const authMiddleware = require('../middleware/auth');
+const multer = require('multer')
+const upload = multer({dest:'uploads/'})
 
 /**
  * @swagger
@@ -54,7 +56,29 @@ router.get('/', forumController.getAllPosts);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ForumPost'
+ *               type: object
+ *               properties:
+ *                 id_topico:
+ *                   type: integer
+ *                   description: Topic ID
+ *                 id_utilizador:
+ *                   type: integer
+ *                   description: User ID
+ *                 sub_partilha:
+ *                   type: integer
+ *                   description: Sub-partilha ID
+ *                 titulo:
+ *                   type: string
+ *                   description: Post title
+ *                 conteudo:
+ *                   type: string
+ *                   description: Post content
+ *                 url_pdf:
+ *                   type: file
+ *                   description: PDF URL
+ *                 url_imagem:
+ *                   type: file
+ *                   description: Image URL
  *       404:
  *         description: Post not found
  */
@@ -90,15 +114,46 @@ router.get('/:id', forumController.getPostById);
  *               conteudo:
  *                 type: string
  *                 description: Post content
+ *               url_pdf:
+ *                 type: file
+ *                 description: PDF URL
+ *               url_imagem:
+ *                 type: file
+ *                 description: Image URL
  *     responses:
  *       201:
  *         description: Forum post created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ForumPost'
+ *               type: object
+ *               properties:
+ *                 id_topico:
+ *                   type: integer
+ *                   description: Topic ID
+ *                 id_utilizador:
+ *                   type: integer
+ *                   description: User ID
+ *                 sub_partilha:
+ *                   type: integer
+ *                   description: Sub-partilha ID
+ *                 titulo:
+ *                   type: string
+ *                   description: Post title
+ *                 conteudo:
+ *                   type: string
+ *                   description: Post content
+ *                 url_pdf:
+ *                   type: file
+ *                   description: PDF URL
+ *                 url_imagem:
+ *                   type: file
+ *                   description: Image URL
  */
-router.post('/', forumController.createPost);
+router.post('/', upload.fields([
+    { name: 'url_pdf', maxCount: 1 },
+    { name: 'url_imagem', maxCount: 1 }
+  ]), forumController.createPost);
 
 /**
  * @swagger
@@ -120,14 +175,58 @@ router.post('/', forumController.createPost);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ForumPost'
+ *             type: object
+ *             properties:
+ *               id_topico:
+ *                 type: integer
+ *                 description: Topic ID
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: User ID
+ *               sub_partilha:
+ *                 type: integer
+ *                 description: Sub-partilha ID
+ *               titulo:
+ *                 type: string
+ *                 description: Post title
+ *               conteudo:
+ *                 type: string
+ *                 description: Post content
+ *               url_pdf:
+ *                 type: file
+ *                 description: PDF URL
+ *               url_imagem:
+ *                 type: file
+ *                 description: Image URL
  *     responses:
  *       200:
  *         description: Forum post updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ForumPost'
+ *               type: object
+ *               properties:
+ *                 id_topico:
+ *                   type: integer
+ *                   description: Topic ID
+ *                 id_utilizador:
+ *                   type: integer
+ *                   description: User ID
+ *                 sub_partilha:
+ *                   type: integer
+ *                   description: Sub-partilha ID
+ *                 titulo:
+ *                   type: string
+ *                   description: Post title
+ *                 conteudo:
+ *                   type: string
+ *                   description: Post content
+ *                 url_pdf:
+ *                   type: file
+ *                   description: PDF URL
+ *                 url_imagem:
+ *                   type: file
+ *                   description: Image URL
  *       404:
  *         description: Post not found
  */
@@ -155,6 +254,35 @@ router.put('/:id', forumController.updatePost);
  *         description: Post not found
  */
 router.delete('/:id', forumController.deletePost);
+
+/**
+ * @swagger
+ * /api/forum/{id}/delete/{id_conteudoPartilha}:
+ *   delete:
+ *     summary: Delete forum post content pdf/img
+ *     tags: [Forum]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Post ID
+ *       - in: path
+ *         name: id_conteudoPartilha
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Forum post deleted successfully
+ *       404:
+ *         description: Post content not found
+ */
+router.delete('/:id/delete/:id_conteudoPartilha', forumController.deleteContent);
 
 /**
  * @swagger

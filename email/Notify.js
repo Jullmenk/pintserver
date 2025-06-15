@@ -1,4 +1,4 @@
-function confirmEmailHTML(link) {
+function notifyUserHTML(title, message, resumo) {
   const anoAtual = new Date().getFullYear();
 
   return `
@@ -23,7 +23,7 @@ function confirmEmailHTML(link) {
         }
         h1 {
           color: #1d1c1d;
-          font-size: 36px;
+          font-size: 18px;
           font-weight: 700;
           margin: 30px 0;
           line-height: 42px;
@@ -65,10 +65,9 @@ function confirmEmailHTML(link) {
         <div class="logo">
           <img src="https://res.cloudinary.com/dkvsuatxf/image/upload/v1747750371/ryhcggxgm3t1n5njhdcn.png" alt="Softinsa Logo" />
         </div>
-        <h1>Confirme a sua conta</h1>
-        <p>Olá, Foi criada uma conta com o seu email na nossa plataforma.</p>
-        <p>Se não fez este pedido, ignore este e-mail. Se fez este pedido, confirme a sua conta.</p>
-        <a href="${link}" class="button">Confirmar minha conta</a>
+        <h1>${title}</h1>
+        <p>${message}</p>
+        <p>${resumo}</p>
         <hr />
         <p><strong>SOFTINSA</strong></p>
         <p class="footer">©${anoAtual} Softinsa,<br/>Todos direitos reservados.</p>
@@ -78,4 +77,4 @@ function confirmEmailHTML(link) {
   `;
 }
 
-module.exports = { confirmEmailHTML };
+module.exports = { notifyUserHTML };

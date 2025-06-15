@@ -1,5 +1,6 @@
-const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia, Areas, Categorias } = require('../models');
+const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia, Areas, Categorias, TrabalhosOcorrencia, SubmissoesTrabalhos } = require('../models');
 const cloudinary = require('../config/cloudinary');
+const { notifyUser } = require('../email/email');
 
 
 /* cursos estados : 1 - ativo | 0 - inativo
@@ -25,7 +26,22 @@ const getAllCourses = async (req, res) => {
           ]
         },
         { model: Avaliacoes },
-        { model: OcorrenciasCurso }
+        { model: OcorrenciasCurso,
+          include: [
+            {model: TrabalhosOcorrencia,
+              include: [
+                {
+                  model: SubmissoesTrabalhos,
+                  include: [
+                    {
+                      model: Utilizadores
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
       ]
     });
     res.json(courses);
@@ -57,7 +73,22 @@ const getCoursesByCategory = async (req, res) => {
           ]
         },
         { model: Avaliacoes },
-        { model: OcorrenciasCurso }
+        { model: OcorrenciasCurso,
+          include: [
+            {model: TrabalhosOcorrencia,
+              include: [
+                {
+                  model: SubmissoesTrabalhos,
+                  include: [
+                    {
+                      model: Utilizadores
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
       ],
     });
     res.json(courses);
@@ -109,9 +140,22 @@ const getCourseById = async (req, res) => {
         {
           model: Avaliacoes,
         },
-        {
-          model: OcorrenciasCurso,
-        }
+        { model: OcorrenciasCurso,
+          include: [
+            {model: TrabalhosOcorrencia,
+              include: [
+                {
+                  model: SubmissoesTrabalhos,
+                  include: [
+                    {
+                      model: Utilizadores
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
       ]
     });
 
@@ -204,7 +248,13 @@ const updateCourse = async (req, res) => {
         upload_preset: "pint",
       });
       if(uploadResponse){
-        await cloudinary.uploader.destroy(course.url_capa.secure_url);
+      const url = course.url_capa.secure_url;
+
+      const publicIdWithExt = url.split('/upload/')[1];
+      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
       }
       url_capa = {
         secure_url: uploadResponse.secure_url,
@@ -217,7 +267,13 @@ const updateCourse = async (req, res) => {
         upload_preset: "pint",
       });
       if(uploadResponse){
-        await cloudinary.uploader.destroy(course.url_icon.secure_url);
+      const url = course.url_icon.secure_url;
+
+      const publicIdWithExt = url.split('/upload/')[1];
+      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
       }
       url_icon = {
         secure_url: uploadResponse.secure_url,
@@ -249,11 +305,23 @@ const deleteCourse = async (req, res) => {
     }
 
     if(course.url_capa.secure_url){
-      await cloudinary.uploader.destroy(course.url_capa.secure_url);
+      const url = course.url_capa.secure_url;
+
+      const publicIdWithExt = url.split('/upload/')[1];
+      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     }
 
     if(course.url_icon.secure_url){
-      await cloudinary.uploader.destroy(course.url_icon.secure_url);
+      const url = course.url_icon.secure_url;
+
+      const publicIdWithExt = url.split('/upload/')[1];
+      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     }
 
     await course.destroy();
@@ -327,7 +395,7 @@ const addUserCourse = async (req, res) => {
     }
 
     if(new Date(ocorrencia.data_limite_inscricao) < new Date()){
-      return res.status(400).json({ error: 'Ja passou o limite de inscricao' });
+      return res.status(400).json({ error: 'Ja passou a data limite de inscricao' });
     }
 
     if(ocorrencia.vagas_disponiveis !== null){
@@ -353,7 +421,10 @@ const addUserCourse = async (req, res) => {
       estado: 0 
     })
 
+    const curso = await Cursos.findByPk(ocorrencia.id_curso);
+
     if(novaInscricao){
+      notifyUser(user.email, `Olá ${user.nome}, foi adicionado a uma ocorrência`, `Recebemos o seu pedido de inscricao para uma ocorrencia do curso ${curso.titulo}, e foi realizado com sucesso.`,`Breve resumo do curso: ${curso.descricao}`)
       return res.status(201).json({ message: 'Utilizador adicionado à ocorrência com sucesso' });
     }
   } catch (error) {
@@ -386,7 +457,13 @@ const removeUserFromCourse = async (req, res) => {
       await ocorrencia.save();
     }
 
+    const user = await Utilizadores.findByPk(id_utilizador);
+    const curso = await Cursos.findByPk(ocorrencia.id_curso);
+
+    notifyUser(user.email, `Olá ${user.nome}, foi removido de uma ocorrência`, `Estamos a enviar esse email para confirmar que foi removido de uma ocorrencia do curso ${curso.titulo}.`,``)
+
     await inscricao.destroy();
+
     return res.status(200).json({ message: 'Utilizador removido da ocorrência com sucesso' })
 
   } catch (error) {

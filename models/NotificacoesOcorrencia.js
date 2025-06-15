@@ -17,7 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     data_criacao: {
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+      allowNull: false
     }
   }, {
     tableName: 'notificacoes_ocorrencia',

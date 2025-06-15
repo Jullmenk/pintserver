@@ -27,7 +27,7 @@ const Respostas = require('./Respostas')(sequelize, Sequelize.DataTypes);
 const SubmissoesQuizzes = require('./SubmissoesQuizzes')(sequelize, Sequelize.DataTypes);
 const TrabalhosOcorrencia = require('./TrabalhosOcorrencia')(sequelize, Sequelize.DataTypes);
 const SubmissoesTrabalhos = require('./SubmissoesTrabalhos')(sequelize, Sequelize.DataTypes);
-
+const ConteudoPartilha = require('./conteudo_partilha')(sequelize, Sequelize.DataTypes);
 // Add models to db object
 db.Categorias = Categorias;
 db.Areas = Areas;
@@ -49,6 +49,7 @@ db.Respostas = Respostas;
 db.SubmissoesQuizzes = SubmissoesQuizzes;
 db.TrabalhosOcorrencia = TrabalhosOcorrencia;
 db.SubmissoesTrabalhos = SubmissoesTrabalhos;
+db.ConteudoPartilha = ConteudoPartilha;
 
 // Define associations
 // Categorias -> Areas
@@ -100,6 +101,9 @@ PartilhasConhecimento.hasMany(PartilhasConhecimento, {
     foreignKey: 'sub_partilha',
     as: 'parent'
   });
+
+PartilhasConhecimento.hasMany(ConteudoPartilha, { foreignKey: 'id_partilha' });
+ConteudoPartilha.belongsTo(PartilhasConhecimento, { foreignKey: 'id_partilha' });
 
 // Utilizadores -> PartilhasConhecimento
 Utilizadores.hasMany(PartilhasConhecimento, { foreignKey: 'id_utilizador' });

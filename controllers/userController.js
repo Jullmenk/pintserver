@@ -100,7 +100,13 @@ const updateUser = async (req, res) => {
         upload_preset: "pint",
       });
       if(uploadResponse){
-        await cloudinary.uploader.destroy(user.url_foto_perfil.secure_url);
+        const url = user.url_foto_perfil.secure_url;
+
+        const publicIdWithExt = url.split('/upload/')[1];
+        const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+        const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
       }
       url_foto_perfil = {
         secure_url: uploadResponse.secure_url,
@@ -130,7 +136,13 @@ const deleteUser = async (req, res) => {
     }
 
     if(user.url_foto_perfil.secure_url){
-      await cloudinary.uploader.destroy(user.url_foto_perfil.secure_url);
+      const url = user.url_foto_perfil.secure_url;
+
+      const publicIdWithExt = url.split('/upload/')[1];
+      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
+      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
+
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     }
 
     await user.destroy();

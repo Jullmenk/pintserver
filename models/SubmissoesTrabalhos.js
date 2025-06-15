@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     data_submissao: {
       type: DataTypes.DATE,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
       allowNull: false
     },
     pontuacao: {
@@ -25,8 +26,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(1024)
     },
     url_trabalho: {
-      type: DataTypes.STRING(1024),
-      allowNull: false
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        url: "",
+        secure_url: "",
+      },
     }
   }, {
     tableName: 'submissoes_trabalhos',

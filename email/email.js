@@ -1,7 +1,7 @@
 
 const nodemailer = require("nodemailer");
 const ConfirmEmail = require("./confirmationEmail");
-
+const Notify = require("./Notify");
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail', // e.g., 'Gmail'
@@ -16,9 +16,26 @@ async function emailVerify(link, userEmail) {
       const htmlContent = ConfirmEmail.confirmEmailHTML(link);
   
       const mailOptions = {
-        from: `Griffe <${process.env.EMAIL}>`,
+        from: `SOFTINSA <${process.env.EMAIL}>`,
         to: userEmail,
         subject: 'Confirme o seu endereço de Email',
+        html: htmlContent,
+      };
+  
+      await transporter.sendMail(mailOptions);
+      console.log('Email enviado para', userEmail);
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+    }
+  }
+async function notifyUser(userEmail,title, message, resumo) {
+    try {
+      const htmlContent = Notify.notifyUserHTML(title, message, resumo);
+  
+      const mailOptions = {
+        from: `SOFTINSA <${process.env.EMAIL}>`,
+        to: userEmail,
+        subject: title,
         html: htmlContent,
       };
   
@@ -31,5 +48,6 @@ async function emailVerify(link, userEmail) {
 
 
 module.exports = {
-  emailVerify
+  emailVerify,
+  notifyUser
 }
