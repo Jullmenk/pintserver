@@ -1,5 +1,6 @@
 const { PartilhasConhecimento, Denuncias, NotificacoesForum, Topicos,ConteudoPartilha} = require('../models');
 const cloudinary = require('../config/cloudinary');
+const { destruirArquivoAnterior } = require('../lib/utils');
 const path = require('path');
 // Get all forum posts
 const getAllPosts = async (req, res) => {
@@ -251,15 +252,7 @@ const deleteContent = async (req, res) => {
     }
 
     if (content.conteudo?.secure_url) {
-      const url = content.conteudo.secure_url;
-
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId =  content.tipo_conteudo === 'pdf' ? decodeURIComponent(publicIdWithoutVersion) : decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-      const resourceType = content.tipo_conteudo === 'pdf' ? 'raw' : 'image';
-      await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-      
+      await destruirArquivoAnterior(content.conteudo.secure_url);
     }
 
     await content.destroy();

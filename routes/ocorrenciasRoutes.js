@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createOcorrencia, updateOcorrencia, deleteOcorrencia, submeterTrabalho, avaliarTrabalho } = require('../controllers/ocorrenciasController');
+const { createOcorrencia, updateOcorrencia, deleteOcorrencia, submeterTrabalho, avaliarTrabalho, atualizarTrabalhoSubmetido, apagarTrabalhoSubmetido, adicionarConteudoOcorrencia, atualizarConteudoOcorrencia, deleteConteudoOcorrencia } = require('../controllers/ocorrenciasController');
 const multer = require('multer')
 const upload = multer({dest:'uploads/'})
 
@@ -241,5 +241,178 @@ router.post('/:id_ocorrencia/submeter-trabalho/:id_trabalho',
  *         description: Erro interno do servidor
  */
 router.put('/avaliar-trabalho/:id_submissao_trabalho', avaliarTrabalho);
+
+/**
+ * @swagger
+ * 
+ * /api/ocorrencias/atualizar-trabalho-submetido/{id_submissao_trabalho}:
+ *   put:
+ *     summary: Atualizar um trabalho submetido de uma ocorrência
+ *     description: Atualizar um trabalho submetido de uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_submissao_trabalho
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da submissão de trabalho a ser atualizada
+ *     responses:
+ *       200:
+ *         description: Trabalho atualizado com sucesso
+ *       404:
+ *         description: Submissão de trabalho ou ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.put('/atualizar-trabalho-submetido/:id_submissao_trabalho', upload.fields([{ name: 'url_pdf', maxCount: 1 }]), atualizarTrabalhoSubmetido);
+
+/**
+ * @swagger
+ * 
+ * /api/ocorrencias/apagar-trabalho-submetido/{id_submissao_trabalho}:
+ *   delete:
+ *     summary: Apagar um trabalho submetido de uma ocorrência
+ *     description: Apagar um trabalho submetido de uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_submissao_trabalho
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da submissão de trabalho a ser apagada
+ *     responses:
+ *       200:
+ *         description: Trabalho apagado com sucesso
+ *       404:
+ *         description: Submissão de trabalho ou ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.delete('/apagar-trabalho-submetido/:id_submissao_trabalho', apagarTrabalhoSubmetido);
+
+/**
+ * @swagger
+ * 
+ * /api/ocorrencias/apagar-conteudo-ocorrencia/{id_conteudo}:
+ *   delete:
+ *     summary: Apagar um conteúdo de uma ocorrência
+ *     description: Apagar um conteúdo de uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_conteudo
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do conteúdo a ser apagado
+ *     responses:
+ *       200:
+ *         description: Conteúdo apagado com sucesso
+ *       404:
+ *         description: Conteúdo ou ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.delete('/apagar-conteudo-ocorrencia/:id_conteudo', deleteConteudoOcorrencia);
+
+/**
+ * @swagger
+ * 
+ * /api/ocorrencias/adicionar-conteudo-ocorrencia/{id_ocorrencia}:
+ *   post:
+ *     summary: Adicionar um conteúdo a uma ocorrência
+ *     description: Adicionar um conteúdo a uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_ocorrencia
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da ocorrência a que o conteúdo será adicionado
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               titulo:
+ *                 type: string
+ *                 description: Título do conteúdo
+ *               conteudo:
+ *                 type: string
+ *                 description: Conteúdo (PDF | Vídeo) se for Video apenas colococar o link do video, caso pdf submeter o pdf no url_pdf 
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: ID do utilizador que está a adicionar o conteúdo
+ *               url_pdf:
+ *                 type: file
+ *                 description: PDF do conteúdo
+ *     responses:
+ *       200:
+ *         description: Conteúdo adicionado com sucesso
+ *       404:
+ *         description: Ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.post('/adicionar-conteudo-ocorrencia/:id_ocorrencia', upload.fields([{ name: 'url_pdf', maxCount: 1 }]), adicionarConteudoOcorrencia);
+
+/**
+ * @swagger
+ * 
+ * /api/ocorrencias/atualizar-conteudo-ocorrencia/{id_conteudo}:
+ *   put:
+ *     summary: Atualizar um conteúdo de uma ocorrência
+ *     description: Atualizar um conteúdo de uma ocorrência específica
+ *     tags: [Ocorrências]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_conteudo
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do conteúdo a ser atualizado
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               titulo:
+ *                 type: string
+ *                 description: Título do conteúdo
+ *               conteudo:
+ *                 type: string
+ *                 description: Conteúdo (PDF | Vídeo) se for Video apenas colococar o link do video, caso pdf submeter o pdf no url_pdf, caso nao alterar apenas o titulo ou estado ignorar esse campo e o campo do url_pdf
+ *               id_utilizador:
+ *                 type: integer
+ *                 description: ID do utilizador que está a atualizar o conteúdo
+ *               url_pdf:
+ *                 type: file
+ *                 description: PDF do conteúdo
+ *     responses:
+ *       200:
+ *         description: Conteúdo atualizado com sucesso
+ *       404:
+ *         description: Conteúdo ou ocorrência não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.put('/atualizar-conteudo-ocorrencia/:id_conteudo', upload.fields([{ name: 'url_pdf', maxCount: 1 }]), atualizarConteudoOcorrencia);
 
 module.exports = router;

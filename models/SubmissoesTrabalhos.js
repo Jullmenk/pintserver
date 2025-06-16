@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     pontuacao: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: true
     },
     feedback: {
       type: DataTypes.STRING(1024)

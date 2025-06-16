@@ -395,4 +395,8 @@ router.post('/:id/users', courseController.addUserCourse);
  */
 
 router.delete('/:id/users', courseController.removeUserFromCourse);
+
+router.post('/test/:id', upload.fields([
+    { name: 'url_pdf', maxCount: 1 }
+  ]), courseController.teste);
 module.exports = router;

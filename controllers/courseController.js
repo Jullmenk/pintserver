@@ -1,7 +1,8 @@
-const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia, Areas, Categorias, TrabalhosOcorrencia, SubmissoesTrabalhos } = require('../models');
+const { Cursos, Topicos, Avaliacoes, OcorrenciasCurso, Utilizadores, InscricoesOcorrencia, Areas, Categorias, TrabalhosOcorrencia, SubmissoesTrabalhos, Contudos } = require('../models');
 const cloudinary = require('../config/cloudinary');
 const { notifyUser } = require('../email/email');
-
+const { destruirArquivoAnterior } = require('../lib/utils');
+const path = require('path');
 
 /* cursos estados : 1 - ativo | 0 - inativo
 ocorrencias estados : 1 - ativo | 0 - inativo
@@ -28,6 +29,7 @@ const getAllCourses = async (req, res) => {
         { model: Avaliacoes },
         { model: OcorrenciasCurso,
           include: [
+            {model: Contudos},
             {model: TrabalhosOcorrencia,
               include: [
                 {
@@ -75,6 +77,7 @@ const getCoursesByCategory = async (req, res) => {
         { model: Avaliacoes },
         { model: OcorrenciasCurso,
           include: [
+            {model: Contudos},
             {model: TrabalhosOcorrencia,
               include: [
                 {
@@ -119,7 +122,23 @@ const getCoursesByArea = async (req, res) => {
           ]
         },
         { model: Avaliacoes },
-        { model: OcorrenciasCurso }
+        { model: OcorrenciasCurso,
+          include: [
+            {model: Contudos},
+            {model: TrabalhosOcorrencia,
+              include: [
+                {
+                  model: SubmissoesTrabalhos,
+                  include: [
+                    {
+                      model: Utilizadores
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
       ],
     });
     res.json(courses);
@@ -142,6 +161,7 @@ const getCourseById = async (req, res) => {
         },
         { model: OcorrenciasCurso,
           include: [
+            {model: Contudos},
             {model: TrabalhosOcorrencia,
               include: [
                 {
@@ -171,7 +191,8 @@ const getCourseById = async (req, res) => {
       data_criacao: course.data_criacao,
       ultima_atualizacao: course.ultima_atualizacao,
       Avaliacoes: course.dataValues.Avaliacoes,
-      OcorrenciasCurso: course.dataValues.OcorrenciasCursos
+      OcorrenciasCurso: course.dataValues.OcorrenciasCursos,
+      Contudos: course.dataValues.Contudos,
     };
     if (!course) {
       return res.status(404).json({ error: 'Course not found' });
@@ -250,11 +271,7 @@ const updateCourse = async (req, res) => {
       if(uploadResponse){
       const url = course.url_capa.secure_url;
 
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+      await destruirArquivoAnterior(url);
       }
       url_capa = {
         secure_url: uploadResponse.secure_url,
@@ -267,13 +284,7 @@ const updateCourse = async (req, res) => {
         upload_preset: "pint",
       });
       if(uploadResponse){
-      const url = course.url_icon.secure_url;
-
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+      await destruirArquivoAnterior(course.url_icon.secure_url);
       }
       url_icon = {
         secure_url: uploadResponse.secure_url,
@@ -305,23 +316,11 @@ const deleteCourse = async (req, res) => {
     }
 
     if(course.url_capa.secure_url){
-      const url = course.url_capa.secure_url;
-
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+      await destruirArquivoAnterior(course.url_capa.secure_url);
     }
 
     if(course.url_icon.secure_url){
-      const url = course.url_icon.secure_url;
-
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+      await destruirArquivoAnterior(course.url_icon.secure_url);
     }
 
     await course.destroy();
@@ -472,6 +471,46 @@ const removeUserFromCourse = async (req, res) => {
   }
 };
 
+const teste = async (req, res) => {
+  try {
+    const course = await Contudos.findByPk(req.params.id);
+    if (!course) {
+      return res.status(404).json({ error: 'Contudo not found' });
+    }
+
+      const pdfFile = req.files['url_pdf']?.[0];
+      let url_pdf = null;
+      let conteudo_pdf = null;
+
+      if (pdfFile) {
+        const fileExtension = pdfFile.originalname.slice(-4).toLowerCase();
+        if (fileExtension !== ".pdf") {
+          return res.status(400).json({ error: "Arquivo inválido, deve ser .pdf" });
+        }
+    
+        const uploadResponse = await cloudinary.uploader.upload(pdfFile.path, {
+          resource_type: "raw",
+          public_id: `docs/${path.parse(pdfFile.originalname).name}.pdf`,
+          upload_preset: "pint",
+        });
+    
+        url_pdf = uploadResponse.url;
+    
+        if (url_pdf) {
+          conteudo_pdf = await course.update({
+            conteudo: url_pdf,
+          });
+        }
+    
+      } 
+
+    res.json(course);
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Error fetching course' });
+  }
+};
+
 
 module.exports = {
   getAllCourses,
@@ -484,4 +523,5 @@ module.exports = {
   getCoursesByArea,
   addUserCourse,
   removeUserFromCourse,
+  teste,
 };

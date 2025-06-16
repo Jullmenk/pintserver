@@ -1,5 +1,6 @@
 const { Utilizadores, TipoUtilizador, Cursos, InscricoesOcorrencia, OcorrenciasCurso, Topicos } = require('../models');
 const cloudinary = require('../config/cloudinary');
+const { destruirArquivoAnterior } = require('../lib/utils');
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
@@ -100,13 +101,7 @@ const updateUser = async (req, res) => {
         upload_preset: "pint",
       });
       if(uploadResponse){
-        const url = user.url_foto_perfil.secure_url;
-
-        const publicIdWithExt = url.split('/upload/')[1];
-        const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-        const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+        await destruirArquivoAnterior(user.url_foto_perfil.secure_url);
       }
       url_foto_perfil = {
         secure_url: uploadResponse.secure_url,
@@ -136,13 +131,7 @@ const deleteUser = async (req, res) => {
     }
 
     if(user.url_foto_perfil.secure_url){
-      const url = user.url_foto_perfil.secure_url;
-
-      const publicIdWithExt = url.split('/upload/')[1];
-      const publicIdWithoutVersion = publicIdWithExt.replace(/^v\d+\//, '')
-      const publicId = decodeURIComponent(publicIdWithoutVersion.replace(/\.[^/.]+$/, ''));
-
-      await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+      await destruirArquivoAnterior(user.url_foto_perfil.secure_url);
     }
 
     await user.destroy();
