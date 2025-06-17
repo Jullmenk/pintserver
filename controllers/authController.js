@@ -46,7 +46,7 @@ const register = async (req, res) => {
     );
 
     if(user){
-      const link = `${process.env.FRONTEND_URL}/confirm-email?token=${userToken}`;
+      const link = `${process.env.FRONTEND_URL}/auth/verify-account?token=${userToken}`;
       await emailVerify(link, user.email); 
     }
 
@@ -67,23 +67,31 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, passe, logintype } = req.body;
-
-
+    console.log(email, passe, logintype)
     const user = await Utilizadores.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     if(user.primeiro_login == null){
-      return res.status(401).json({ error: 'Utilizador nao verificado' });
+
+      const now = Math.floor(Date.now() / 1000); 
+      const expiresInSeconds = 24 * 60 * 60;
+      const userToken = jwt.sign(
+        { id: user.id_utilizador,exp: now + expiresInSeconds },
+        process.env.JWT_SECRET,
+      );
+      const link = `${process.env.FRONTEND_URL}/auth/verify-account?token=${userToken}`;
+      await emailVerify(link, user.email); 
+      return res.status(401).json({ error: `Utilizador não verificado, acabamos de enviar um email de verificação para o seu email ${user.email}, verifique o seu email para confirmar a sua conta` });
     }
     
     const isValidPassword = await bcrypt.compare(passe, user.passe);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
     const now = Math.floor(Date.now() / 1000);
-    const expiresInSeconds = 24 * 60 * 60;
+    const expiresInSeconds = 2 * 24 * 60 * 60;
 
     if (user.primeiro_login === null) {
       user.ultimo_login = new Date();
@@ -101,7 +109,10 @@ const login = async (req, res) => {
       {
         id: user.id_utilizador,
         exp: now + expiresInSeconds,
-        tipo_utilizador: type
+        tipo_utilizador: type,
+        email: user.email,
+        nome: user.nome,
+        avatar: user.url_foto_perfil.url
       },
       process.env.JWT_SECRET
     );
@@ -111,11 +122,13 @@ const login = async (req, res) => {
         id: user.id_utilizador,
         nome: user.nome,
         email: user.email,
-        tipo_utilizador: type
+        tipo_utilizador: type,
+        avatar: user.url_foto_perfil
       },
       token
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: 'Error logging in' });
   }
 };
@@ -123,14 +136,16 @@ const login = async (req, res) => {
 const validateTokenUserFirstLogin = async (req, res) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    
     if(decoded.exp<Date.now()/1000){
-      return res.status(401).json({ error: 'Token expirado' });
+      return res.status(401).json({ error: 'Token expirado, clique em enviar novamente' });
     }
 
     const { novaPasse } = req.body;
@@ -162,6 +177,7 @@ const validateTokenUserFirstLogin = async (req, res) => {
     res.json({ success: true, message: 'Password atualizada com sucesso' });
 
   } catch (error) {
+    console.log(error)
     res.status(401).json({ valid: false, error: 'Algo de errado aconteceu, lamentamos' });
   }
 };

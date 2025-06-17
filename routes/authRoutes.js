@@ -180,9 +180,9 @@ router.get('/validate-token', authController.validateToken);
 
 /**
  * @swagger
- * /api/auth/confirm-account:
+ * /api/auth/verify-account:
  *   post:
- *     summary: Confirm account and update password on first login
+ *     summary: Verify account and update password on first login
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -240,6 +240,6 @@ router.get('/validate-token', authController.validateToken);
  *                 error:
  *                   type: string
  */
-router.post('/confirm-account', authController.validateTokenUserFirstLogin);
+router.post('/verify-account', authController.validateTokenUserFirstLogin);
 
 module.exports = router;
