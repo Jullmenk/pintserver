@@ -200,9 +200,79 @@ const validateToken = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(email)
+    const user = await Utilizadores.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
+    }
+    const token = jwt.sign(
+      { id: user.id_utilizador, exp: Date.now() / 1000 + 60 * 10 },
+      process.env.JWT_SECRET,
+    );
+    const link = `${process.env.FRONTEND_URL}/auth/change-password?token=${token}`;
+    await emailVerify(link, user.email);
+    res.json({ success: true, message: 'Email de redefinição de password enviado' });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Erro ao enviar email de redefinição de password' });
+  }
+};
+
+const validateTokenResetPassword = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if(decoded.exp<Date.now()/1000){
+      return res.status(403).json({ error: 'Token expirado' });
+    }
+    res.json({ valid: true, user: decoded });
+  } catch (error) {
+    console.log(error)
+    res.status(401).json({ valid: false, error: 'Algo de errado aconteceu, lamentamos' });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if(decoded.exp<Date.now()/1000){
+      return res.status(403).json({ error: 'Token expirado' });
+    }
+
+    const { id_utilizador, novaPasse } = req.body;
+    const user = await Utilizadores.findByPk(id_utilizador);
+    if (!user) {
+      return res.status(404).json({ error: 'Utilizador nao encontrado' });
+    }
+    const hashedPassword = await bcrypt.hash(novaPasse, 12);
+    user.passe = hashedPassword;
+    await user.save();
+    res.json({ success: true, message: 'Password atualizada com sucesso' });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Erro ao atualizar password' });
+  }
+};
+
 module.exports = {
   register,
   login,
   validateToken,
-  validateTokenUserFirstLogin
+  validateTokenUserFirstLogin,
+  changePassword,
+  resetPassword,
+  validateTokenResetPassword,
 };
