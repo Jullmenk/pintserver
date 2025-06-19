@@ -11,6 +11,7 @@ const courseRoutes = require('./routes/courseRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const forumRoutes = require('./routes/forumRoutes');
 const ocorrenciasRoutes = require('./routes/ocorrenciasRoutes');
+const extrasRoutes = require('./routes/extras');
 const { swaggerUi, specs } = require('./swagger');
 
 // Middleware
@@ -28,6 +29,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/ocorrencias', ocorrenciasRoutes);
+app.use('/api/extras', extrasRoutes);
 
 // Test route
 app.get('/', (req, res) => {

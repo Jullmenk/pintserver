@@ -1,25 +1,45 @@
-const { PartilhasConhecimento, Denuncias, NotificacoesForum, Topicos,ConteudoPartilha} = require('../models');
+const { PartilhasConhecimento, Denuncias, NotificacoesForum, Topicos,ConteudoPartilha, Utilizadores, Cursos} = require('../models');
 const cloudinary = require('../config/cloudinary');
 const { destruirArquivoAnterior } = require('../lib/utils');
 const path = require('path');
+const { Op } = require('sequelize');
 // Get all forum posts
 const getAllPosts = async (req, res) => {
   try {
     const allPosts = await PartilhasConhecimento.findAll({
-      include: [Denuncias, Topicos, NotificacoesForum,ConteudoPartilha],
+      include: [Denuncias, Topicos, NotificacoesForum,ConteudoPartilha,Utilizadores],
       order: [['id_partilha', 'ASC']]
     });
     
+    const posts = allPosts.map((post) => {
+      const plainPost = post.toJSON();
+
+      const utilizador = plainPost.Utilizadore || {};
+      const sanitizedUtilizador = {
+        nome: utilizador.nome?.trim() || null,
+        url_foto_perfil: utilizador.url_foto_perfil?.url || null,
+      };
+
+      delete plainPost.Utilizadore;
+      delete plainPost.passe;
+
+      return {
+        ...plainPost,
+        Utilizador: sanitizedUtilizador,
+      };
+    });
+    
+
     function buildTree(items, parentId = null) {
       return items
         .filter(item => item.sub_partilha === parentId)
         .map(item => ({
-          ...item.toJSON(),
+          ...item,
           comentarios: buildTree(items, item.id_partilha)
         }));
     }
     
-    const tree = buildTree(allPosts, null);
+    const tree = buildTree(posts, null);
     res.json(tree);
     
   } catch (error) {
@@ -32,25 +52,79 @@ const getAllPosts = async (req, res) => {
 const getPostById = async (req, res) => {
   try { 
     const allPosts = await PartilhasConhecimento.findAll({
-      include: [Denuncias, Topicos, NotificacoesForum,ConteudoPartilha],
+      include: [Denuncias, Topicos, NotificacoesForum,ConteudoPartilha,Utilizadores],
       order: [['id_partilha', 'ASC']]
     });
     
+    const posts = allPosts.map((post) => {
+      const plainPost = post.toJSON();
+
+      const utilizador = plainPost.Utilizadore || {};
+      const sanitizedUtilizador = {
+        nome: utilizador.nome?.trim() || null,
+        url_foto_perfil: utilizador.url_foto_perfil?.url || null,
+      };
+
+      delete plainPost.Utilizadore;
+      delete plainPost.passe;
+
+      return {
+        ...plainPost,
+        Utilizador: sanitizedUtilizador,
+      };
+    });
+
     function buildTree(items, parentId = null) {
       return items
         .filter(item => item.sub_partilha === parentId)
         .map(item => ({
-          ...item.toJSON(),
+          ...item,
           comentarios: buildTree(items, item.id_partilha)
         }));
     }
-    
-    const tree = buildTree(allPosts, null);
-    const post = tree.find(post => post.id_partilha === parseInt(req.params.id));
 
+    const tree = buildTree(posts, null);
+    const post = tree.find(post => post.id_partilha === parseInt(req.params.id));    
     if(!post){
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
+
+    let topicosRelacionados = await PartilhasConhecimento.findAll({
+      where: {
+        id_topico: post.id_topico,
+        sub_partilha: null,
+        id_partilha: { [Op.ne]: parseInt(req.params.id) }
+      },
+      include:[Utilizadores],
+      order: [['id_partilha', 'ASC']]
+    });
+
+    topicosRelacionados = topicosRelacionados.map(topico => {
+      const plainTopico = topico.toJSON();
+
+      const utilizador = plainTopico.Utilizadore || {};
+      const sanitizedUtilizador = {
+        nome: utilizador.nome?.trim() || null,
+        url_foto_perfil: utilizador.url_foto_perfil?.url || null,
+      };
+
+      delete plainTopico.Utilizadore;
+      delete plainTopico.passe;
+
+      return {
+        ...plainTopico,
+        Utilizador: sanitizedUtilizador,
+      };
+    });
+
+    const curso = await Cursos.findOne({
+      where: {
+        id_topico: post.id_topico
+      }
+    });
+
+    post.topicosRelacionados = topicosRelacionados;
+    post.curso = curso;
 
     res.json(post);
 
@@ -65,15 +139,21 @@ const createPost = async (req, res) => {
   try {
     let { id_topico, id_utilizador, sub_partilha, titulo, conteudo } = req.body;
 
-    const pdfFile = req.files['url_pdf']?.[0];
-    const imageFile = req.files['url_imagem']?.[0];
+    console.log(req.files)
+
+    const pdfFile = req.files?.['url_pdf']?.[0] ?? null;
+    const imageFile = req.files?.['url_imagem']?.[0] ?? null;
     let url_pdf = null;
     let url_imagem = null;
     let conteudo_pdf = null;
     let conteudo_imagem = null;
+
+    const topico = await Topicos.findByPk(id_topico);
+    if(!topico){
+      return res.status(404).json({ error: 'Tópico não encontrado' });
+    }
     
     if(pdfFile){
-
       const fileExtension = pdfFile.originalname.slice(-4).toLowerCase();
       if (fileExtension !== '.pdf') {
         return res.status(400).json({ error: 'Arquivo inválido, deve ser .pdf' });
@@ -84,7 +164,6 @@ const createPost = async (req, res) => {
         public_id: `docs/${path.parse(pdfFile.originalname).name}.pdf`, 
         upload_preset: 'pint'
       });
-      
 
       url_pdf = {
         secure_url: uploadResponse.secure_url,
@@ -138,7 +217,7 @@ const createPost = async (req, res) => {
     res.status(201).json({post, conteudo_pdf, conteudo_imagem});
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Error creating post' });
+    res.status(500).json({ error: 'Erro ao criar post' });
   }
 };
 
@@ -172,7 +251,6 @@ const denouncePost = async (req, res) => {
 // Update forum post
 const updatePost = async (req, res) => {
   try {
-
     const { titulo, conteudo } = req.body;
 
     const pdfFile = req.files['url_pdf']?.[0];
@@ -226,7 +304,6 @@ const updatePost = async (req, res) => {
         tipo_conteudo: 'img'
       });
     }
-
     
     await post.update({
       titulo,
@@ -270,9 +347,23 @@ const deletePost = async (req, res) => {
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
 
+    const contents = await ConteudoPartilha.findAll({
+      where: {
+        id_partilha: req.params.id
+      }
+    });
+    
+    for (const content of contents) {
+      if (content.conteudo?.secure_url) {
+        await destruirArquivoAnterior(content.conteudo.secure_url);
+      }
+      await content.destroy();
+    }
+
     await post.destroy();
     res.json({ message: 'Comentário eliminado com sucesso' });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Erro ao eliminar comentário' });
   }
 };

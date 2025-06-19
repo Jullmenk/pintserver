@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(256)
     },
     conteudo: {
-      type: DataTypes.STRING(1024),
+      type: DataTypes.TEXT,
       allowNull: false
     },
     data_criacao: {
