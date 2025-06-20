@@ -55,7 +55,18 @@ const getUserById = async (req, res) => {
       include: [{
         model: TipoUtilizador,
         attributes: ['designacao']
-      }]
+      },
+      {
+        model: InscricoesOcorrencia,
+        include: [{
+          model: OcorrenciasCurso,
+          include: [{
+            model: Cursos,
+            include: [Topicos]
+          }]
+        }]
+      }
+    ]
     });
     if (!user) {
       return res.status(404).json({ error: 'Utilizador não encontrado' });
@@ -73,7 +84,8 @@ const getUserById = async (req, res) => {
         url_foto_perfil: user.url_foto_perfil,
         biografia: user.biografia,
         departamento: user.departamento,
-        area_preferidas: user.area_preferidas
+        area_preferidas: user.area_preferidas,
+        InscricoesOcorrencia: user.InscricoesOcorrencia,  
       };
 
     res.json(usersData);

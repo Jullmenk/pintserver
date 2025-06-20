@@ -230,7 +230,10 @@ router.post('/', upload.fields([
  *       404:
  *         description: Post not found
  */
-router.put('/:id', forumController.updatePost);
+router.put('/:id', upload.fields([
+    { name: 'url_pdf', maxCount: 1 },
+    { name: 'url_imagem', maxCount: 1 }
+  ]), forumController.updatePost);
 
 /**
  * @swagger
