@@ -196,6 +196,7 @@ const validateToken = async (req, res) => {
     }
     res.json({ valid: true, user: decoded });
   } catch (error) {
+    console.log(error)
     res.status(401).json({ valid: false, error: 'Algo de errado aconteceu, lamentamos' });
   }
 };

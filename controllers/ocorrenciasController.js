@@ -564,6 +564,11 @@ const adicionarConteudoOcorrencia = async (req, res) => {
     });
   }
 
+  const users = await InscricoesOcorrencia.findAll({
+    where: { id_ocorrencia },
+    include: [{ model: Utilizadores }],
+  });
+
   res.json({
     message: "Conteudo adicionado com sucesso",
     conteudo_pdf,

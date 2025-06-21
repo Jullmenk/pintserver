@@ -88,8 +88,7 @@ const getPostById = async (req, res) => {
     if(!post){
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
-
-    let topicosRelacionados = await PartilhasConhecimento.findAll({
+let topicosRelacionados = await PartilhasConhecimento.findAll({
       where: {
         id_topico: post.id_topico,
         sub_partilha: null,
@@ -138,8 +137,6 @@ const getPostById = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     let { id_topico, id_utilizador, sub_partilha, titulo, conteudo } = req.body;
-
-    console.log(req.files)
 
     const pdfFile = req.files?.['url_pdf']?.[0] ?? null;
     const imageFile = req.files?.['url_imagem']?.[0] ?? null;

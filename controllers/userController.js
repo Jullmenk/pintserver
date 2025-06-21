@@ -50,6 +50,8 @@ const getAllUsersType = async (req, res) => {
 
 // Get user by ID
 const getUserById = async (req, res) => {
+
+  console.log("**********debug"+req.params.id)
   try {
     const user = await Utilizadores.findByPk(req.params.id, {
       include: [{
