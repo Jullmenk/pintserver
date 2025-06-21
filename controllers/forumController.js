@@ -88,8 +88,7 @@ const getPostById = async (req, res) => {
     if(!post){
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
-
-    let topicosRelacionados = await PartilhasConhecimento.findAll({
+let topicosRelacionados = await PartilhasConhecimento.findAll({
       where: {
         id_topico: post.id_topico,
         sub_partilha: null,
@@ -138,8 +137,6 @@ const getPostById = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     let { id_topico, id_utilizador, sub_partilha, titulo, conteudo } = req.body;
-
-    console.log(req.files)
 
     const pdfFile = req.files?.['url_pdf']?.[0] ?? null;
     const imageFile = req.files?.['url_imagem']?.[0] ?? null;
@@ -214,7 +211,7 @@ const createPost = async (req, res) => {
       });
     }
     
-    res.status(201).json({post, conteudo_pdf, conteudo_imagem});
+    res.status(201).json({post, ConteudoPartilhas:[conteudo_pdf, conteudo_imagem]});
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Erro ao criar post' });
@@ -244,17 +241,19 @@ const denouncePost = async (req, res) => {
     
     res.status(201).json(denounce);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Error denouncing post' });
   }
 };
 
 // Update forum post
 const updatePost = async (req, res) => {
+  console.log(req.files)
   try {
     const { titulo, conteudo } = req.body;
-
-    const pdfFile = req.files['url_pdf']?.[0];
-    const imageFile = req.files['url_imagem']?.[0];
+    
+    const pdfFile = req.files['url_pdf']?.[0] ?? null;
+    const imageFile = req.files['url_imagem']?.[0] ?? null;
     let url_pdf = null;
     let url_imagem = null;
     let conteudo_pdf = null;
@@ -310,8 +309,9 @@ const updatePost = async (req, res) => {
       conteudo,
     });
 
-    res.json({post, conteudo_pdf, conteudo_imagem});
+    res.json({post, ConteudoPartilhas:[conteudo_pdf, conteudo_imagem]});
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Erro ao atualizar comentário' });
   }
 };
@@ -335,6 +335,7 @@ const deleteContent = async (req, res) => {
     await content.destroy();
     res.json({ message: 'Ficheiro eliminado com sucesso' });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Erro ao eliminar ficheiro' });
   }
 };
@@ -347,6 +348,22 @@ const deletePost = async (req, res) => {
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
 
+    // Find all replies to this post
+    const comentarios = await PartilhasConhecimento.findAll({
+      where: {
+        sub_partilha: req.params.id
+      }
+    });
+
+    // Recursively delete all replies
+    for (const comentario of comentarios) {
+      await deletePost({ params: { id: comentario.id_partilha } }, { 
+        status: () => ({ json: () => {} }),
+        json: () => {}
+      });
+    }
+
+    // Delete associated contents and their files
     const contents = await ConteudoPartilha.findAll({
       where: {
         id_partilha: req.params.id
@@ -360,7 +377,9 @@ const deletePost = async (req, res) => {
       await content.destroy();
     }
 
+    // Delete the post itself
     await post.destroy();
+
     res.json({ message: 'Comentário eliminado com sucesso' });
   } catch (error) {
     console.log(error);
